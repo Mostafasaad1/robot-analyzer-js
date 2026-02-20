@@ -1,0 +1,232 @@
+/* Floating Panel Styles */
+.floating-panel {
+  position: fixed;
+  width: 320px;
+  min-width: 280px;
+  max-width: 400px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height var(--transition-fast), width var(--transition-fast), opacity var(--transition-fast);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-left: 3px solid var(--panel-accent, var(--color-accent));
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.floating-panel-expanded {
+  height: 500px;
+}
+
+.floating-panel-collapsed {
+  height: 48px;
+}
+
+.floating-panel-minimized {
+  height: 48px;
+  width: 200px;
+  opacity: 0.8;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--color-border);
+  cursor: move;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.panel-icon {
+  font-size: 18px;
+}
+
+.panel-title-text {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.panel-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.panel-control-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.panel-control-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-primary);
+  transform: scale(1.1);
+}
+
+.minimize-btn:hover {
+  background: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+}
+
+.expand-btn:hover {
+  background: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.close-btn:hover {
+  background: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.panel-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-content-inner {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+}
+
+/* Custom scrollbar for panel content */
+.panel-content-inner::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-content-inner::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.panel-content-inner::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.panel-content-inner::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Panel Grid Layout */
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+/* Panel Dock - for minimized panels */
+.panel-dock {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 999;
+}
+
+.docked-panel {
+  width: 200px;
+  height: 48px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  opacity: 0.8;
+}
+
+.docked-panel:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.docked-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.docked-icon {
+  font-size: 16px;
+}
+
+.docked-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.docked-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.docked-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .floating-panel {
+    width: 280px;
+  }
+  
+  .floating-panel-expanded {
+    height: 400px;
+  }
+  
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
