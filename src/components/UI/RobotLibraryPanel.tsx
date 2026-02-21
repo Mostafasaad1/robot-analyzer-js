@@ -4,16 +4,26 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useSessionStore } from '../../stores/sessionStore';
-import { apiService } from '../../services/api';
+import { useRobotSession } from '../../hooks/useRobotSession';
+import { extractRobotPackage, validateRobotPackage } from '../../utils/zipExtractor';
 
 interface LibraryRobot {
     filename: string;
     name: string;
 }
 
+const BUILTIN_ROBOTS: LibraryRobot[] = [
+    { filename: 'abb_irb120_support.zip', name: 'ABB IRB 120' },
+    { filename: 'yumi_description.zip', name: 'ABB YuMi (IRB 14000)' },
+    { filename: 'franka_description.zip', name: 'Franka Emika Panda' },
+    { filename: 'iiwa_description.zip', name: 'KUKA LBR iiwa' },
+    { filename: 'kuka_kr120_support.zip', name: 'KUKA KR 120' },
+    { filename: 'kuka_kr210_support.zip', name: 'KUKA KR 210' },
+    { filename: 'staubli_rx160_support.zip', name: 'Stäubli RX160' },
+];
+
 export function RobotLibraryPanel() {
-    const { setSession } = useSessionStore();
+    const { createSession } = useRobotSession();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [robots, setRobots] = useState<LibraryRobot[]>([]);
     const [loading, setLoading] = useState(false);
@@ -27,28 +37,45 @@ export function RobotLibraryPanel() {
     }, [isCollapsed]);
 
     const fetchRobots = async () => {
-        // Avoid refetching if we already have robots (unless explicit refresh needed)
-        if (robots.length > 0) return;
-
-        setLoading(true);
-        try {
-            const data = await apiService.listLibraryRobots();
-            setRobots(data.robots);
-        } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
+        // Just set the hardcoded list
+        setRobots(BUILTIN_ROBOTS);
     };
 
     const handleLoad = async (robot: LibraryRobot) => {
         setLoadingRobot(robot.filename);
         setError(null);
         try {
-            const result = await apiService.loadLibraryRobot(robot.filename);
-            setSession(result.sessionId, result.robotInfo);
+            // Fetch the zip from the public directory
+            const url = `${import.meta.env.BASE_URL}library/${robot.filename}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Failed to download ${robot.name}`);
+            }
+
+            const blob = await response.blob();
+            const file = new File([blob], robot.filename, { type: 'application/zip' });
+
+            // Extract ZIP locally
+            const extracted = await extractRobotPackage(file);
+
+            // Validate package completeness
+            const validation = validateRobotPackage(extracted);
+            if (!validation.valid) {
+                throw new Error(validation.error || 'Invalid robot package');
+            }
+
+            // Convert Map to Record
+            const meshFilesRecord: Record<string, Blob> = {};
+            extracted.meshFiles.forEach((b, filename) => {
+                meshFilesRecord[filename] = b;
+            });
+
+            // Parse URDF, compile WASM model, and create session
+            await createSession(extracted.urdfContent, meshFilesRecord, extracted.urdfFilename);
+
         } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
+            setError(err.message || "Failed to load robot");
         } finally {
             setLoadingRobot(null);
         }
