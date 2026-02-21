@@ -3,9 +3,9 @@
 A high-performance, offline-first React + TypeScript web application for robotic kinematics and dynamics analysis. 
 This tool visualizes URDF models in 3D and computes complex robotics math **entirely in the browser** using a WebAssembly port of the [Pinocchio](https://github.com/stack-of-tasks/pinocchio) rigid body dynamics library.
 
-![Robot Analyzer Demo](https://raw.githubusercontent.com/stack-of-tasks/pinocchio/master/doc/images/pinocchio-logo-large.png)
+<!-- ![Robot Analyzer Demo](https://raw.githubusercontent.com/stack-of-tasks/pinocchio/master/doc/images/pinocchio-logo-large.png) -->
 
-> **🤖 AI-Assisted Development:** Over 70% of this frontend architecture and implementation was built using AI agents (specifically **Gemini 3 Pro** and **Kimi 2.5**). The human developer drove the architectural decisions, provided guidance, and assisted throughout the process.
+> **🤖 AI-Assisted Development:** Over 70% of this frontend architecture and implementation was built using AI agents (specifically **Gemini 3 Pro** and **Kimi 2.5**). I only drove the architectural decisions, provided guidance, and assisted throughout the process.
 
 ## 🚀 Features
 
