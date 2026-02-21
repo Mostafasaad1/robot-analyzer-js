@@ -5,6 +5,8 @@ This tool visualizes URDF models in 3D and computes complex robotics math **enti
 
 ![Robot Analyzer Demo](https://raw.githubusercontent.com/stack-of-tasks/pinocchio/master/doc/images/pinocchio-logo-large.png)
 
+> **🤖 AI-Assisted Development:** Over 70% of this frontend architecture and implementation was built using AI agents (specifically **Gemini 3 Pro** and **Kimi 2.5**). The human developer drove the architectural decisions, provided guidance, and assisted throughout the process.
+
 ## 🚀 Features
 
 * **Zero-Backend Architecture:** No server required. All computations and parsing happen locally on the client.
