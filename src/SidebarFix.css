@@ -1,0 +1,285 @@
+/**
+ * Sidebar Fix - Tab-based navigation with independent scrolling
+ */
+
+/* Tab Navigation */
+.tab-navigation {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  border-radius: var(--radius-sm);
+}
+
+.tab-button:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-button.tab-active {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+}
+
+.tab-button.tab-active .tab-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--tab-accent, var(--color-accent));
+  border-radius: 0 2px 2px 0;
+}
+
+.tab-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tab-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Tab Content - main scrolling area */
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Custom scrollbar for tab content */
+.tab-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Ensure all panel content stays within bounds */
+.tab-content .robot-upload,
+.tab-content .robot-info,
+.tab-content .joint-control,
+.tab-content .animation-panel,
+.tab-content .dynamics-panel {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Ensure all inputs stay within bounds */
+.tab-content input,
+.tab-content select,
+.tab-content textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all grid layouts stay within bounds */
+.tab-content .ik-input-row,
+.tab-content .dynamics-input-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.tab-content .ik-input-row input,
+.tab-content .dynamics-input-row input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+/* Ensure all slider containers stay within bounds */
+.tab-content .slider-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.tab-content .slider-container input[type=range] {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+/* Ensure all grid-based layouts stay within bounds */
+.tab-content .info-grid,
+.tab-content .library-grid,
+.tab-content .export-buttons,
+.tab-content .jacobian-metrics {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all joint sliders stay within bounds */
+.tab-content .joint-sliders,
+.tab-content .joint-slider {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all joint labels stay within bounds */
+.tab-content .joint-slider label {
+  width: 100%;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+/* Ensure all energy cards stay within bounds */
+.tab-content .energy-cards,
+.tab-content .energy-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all result rows stay within bounds */
+.tab-content .result-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all sv bars stay within bounds */
+.tab-content .sv-bars,
+.tab-content .sv-bar-row {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all com position stays within bounds */
+.tab-content .com-position,
+.tab-content .com-header,
+.tab-content .com-coords {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all matrix containers stay within bounds */
+.tab-content .matrix-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+}
+
+/* Ensure all ik solutions stay within bounds */
+.tab-content .ik-solution {
+  width: 100%;
+  max-width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Ensure all joint names stay within bounds */
+.tab-content .joint-names,
+.tab-content .joint-tags {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all animation controls stay within bounds */
+.tab-content .animation-controls,
+.tab-content .control-group {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all gravity presets stay within bounds */
+.tab-content .gravity-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all button groups stay within bounds */
+.tab-content .button-group {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all compute buttons stay within bounds */
+.tab-content .compute-btn {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all metric cards stay within bounds */
+.tab-content .metric-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all sv sections stay within bounds */
+.tab-content .sv-section,
+.tab-content .diagonal-section,
+.tab-content .mass-breakdown {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
