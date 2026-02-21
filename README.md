@@ -10,7 +10,7 @@ This tool visualizes URDF models in 3D and computes complex robotics math **enti
 ## 🚀 Features
 
 * **Zero-Backend Architecture:** No server required. All computations and parsing happen locally on the client.
-* **WASM Pinocchio Integration:** Lightning-fast C++ dynamics algorithms compiled to WebAssembly (`pinocchio-js`).
+* **WASM Pinocchio Integration:** Lightning-fast C++ dynamics algorithms compiled to WebAssembly using [`pinocchio-js`](https://github.com/Mostafasaad1/pinocchio-js).
 * **Interactive 3D Viewer:** Built with `Three.js` and `@react-three/fiber` for smooth, 60FPS dragging and rendering.
 * **Live Kinematics & Dynamics:**
   * **Inverse/Forward Kinematics:** End-effector targeting via Damped Least Squares (DLS).
