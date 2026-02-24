@@ -81,8 +81,8 @@ class APIService {
    */
   async computeMaxTorques(
     positions: number[],
-    jointVelocity: number = 0,
-    jointAcceleration: number = 0
+    jointVelocities: number | number[] = 0,
+    jointAccelerations: number | number[] = 0
   ): Promise<{ max_torques: number[]; current_gravity_torques: number[]; joint_names: string[] }> {
     if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
 
@@ -90,7 +90,7 @@ class APIService {
     const { robotInfo } = useSessionStore.getState();
     if (!robotInfo) throw new Error("Robot info not available");
 
-    return sampleMaxTorques(this.pin, this.model, this.data, positions, robotInfo, jointVelocity, jointAcceleration) as any;
+    return sampleMaxTorques(this.pin, this.model, this.data, positions, robotInfo, jointVelocities, jointAccelerations) as any;
   }
 
   /**

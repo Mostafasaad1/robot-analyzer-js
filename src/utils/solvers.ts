@@ -109,20 +109,36 @@ export function sampleMaxTorques(
   data: any,
   positions: number[],
   robotInfo: RobotInfo,
-  jointVelocity: number = 0,
-  jointAcceleration: number = 0
+  jointVelocities: number | number[] = 0,
+  jointAccelerations: number | number[] = 0
 ): { max_torques: number[]; current_gravity_torques: number[]; joint_names: string[] } {
   if (!pin || !model || !data) throw new Error("WASM not initialized");
 
   const numJoints = positions.length;
   const nv = model.nv;
 
-  // Create velocity and acceleration arrays with uniform values
+  // Create velocity array - either from array or uniformly from single value
   const velocity = new Float64Array(nv);
+  if (Array.isArray(jointVelocities)) {
+    for (let i = 0; i < nv && i < jointVelocities.length; i++) {
+      velocity[i] = jointVelocities[i];
+    }
+  } else {
+    for (let i = 0; i < nv; i++) {
+      velocity[i] = jointVelocities;
+    }
+  }
+
+  // Create acceleration array - either from array or uniformly from single value
   const acceleration = new Float64Array(nv);
-  for (let i = 0; i < nv; i++) {
-    velocity[i] = jointVelocity;
-    acceleration[i] = jointAcceleration;
+  if (Array.isArray(jointAccelerations)) {
+    for (let i = 0; i < nv && i < jointAccelerations.length; i++) {
+      acceleration[i] = jointAccelerations[i];
+    }
+  } else {
+    for (let i = 0; i < nv; i++) {
+      acceleration[i] = jointAccelerations;
+    }
   }
 
   // 1. Current torques (with specified velocity and acceleration)
@@ -141,7 +157,7 @@ export function sampleMaxTorques(
       const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
       const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
       q_rand[j] = lower + Math.random() * (upper - lower);
-      v_rand[j] = jointVelocity;
+      v_rand[j] = velocity[j];
     }
 
     const tau_rand = pin.rnea(model, data, q_rand, v_rand, acceleration);
