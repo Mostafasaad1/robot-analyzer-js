@@ -146,28 +146,82 @@ export function sampleMaxTorques(
   const tau_current = pin.rnea(model, data, q_current, velocity, acceleration);
   const current_gravity_torques = Array.from(tau_current) as number[];
 
-  // 2. Monte Carlo sampling over joint limits to find peak torques
+  // 2. Fast hybrid sampling: corners + reduced random sampling
   const max_torques: number[] = new Array(numJoints).fill(0);
-  const numSamples = 2000;
-  const q_rand = new Float64Array(nv);
-  const v_rand = new Float64Array(nv);
+  const q_sample = new Float64Array(nv);
+  const v_sample = new Float64Array(nv);
 
-  for (let i = 0; i < numSamples; i++) {
+  // Helper to evaluate torque and update max_torques
+  const evaluateTorque = (q: Float64Array) => {
+    const tau = pin.rnea(model, data, q, v_sample, acceleration);
     for (let j = 0; j < numJoints; j++) {
-      const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
-      const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
-      q_rand[j] = lower + Math.random() * (upper - lower);
-      v_rand[j] = velocity[j];
-    }
-
-    const tau_rand = pin.rnea(model, data, q_rand, v_rand, acceleration);
-    for (let j = 0; j < numJoints; j++) {
-      const absTorque = Math.abs(tau_rand[j]);
+      const absTorque = Math.abs(tau[j]);
       if (absTorque > max_torques[j]) {
         max_torques[j] = absTorque;
       }
     }
+  };
+
+  // Phase 1: Evaluate all joint limit corners (most critical points)
+  // Torque usually peaks at joint limits due to gravity and leverage
+  const corners = [];
+  const numCorners = Math.pow(2, Math.min(numJoints, 4)); // Limit to first 4 joints for corners
+  
+  for (let i = 0; i < numCorners; i++) {
+    const mask = i;
+    for (let j = 0; j < numJoints; j++) {
+      const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
+      const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
+      // Use limit or midpoint based on bit in mask (only for first 4 joints)
+      const useUpper = (j < 4) && ((mask >> j) & 1);
+      q_sample[j] = useUpper ? upper : lower;
+      v_sample[j] = velocity[j];
+    }
+    evaluateTorque(q_sample);
   }
+
+  // Phase 2: Strategic grid sampling for interior points
+  // Use much fewer samples (100 instead of 2000) for speed
+  const gridSamples = 100;
+  for (let i = 0; i < gridSamples; i++) {
+    for (let j = 0; j < numJoints; j++) {
+      const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
+      const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
+      // Stratified sampling: sample at regular intervals then add jitter
+      const step = (upper - lower) / 10;
+      const interval = Math.floor(i / (gridSamples / 10));
+      q_sample[j] = lower + interval * step + (Math.random() - 0.5) * step;
+      v_sample[j] = velocity[j];
+    }
+    evaluateTorque(q_sample);
+  }
+
+  // Phase 3: Sample a few extreme configurations (all max, all min, alternating)
+  const extremes = [
+    'all_min',
+    'all_max',
+    'alternating_even_min',
+    'alternating_odd_min'
+  ];
+
+  extremes.forEach(extreme => {
+    for (let j = 0; j < numJoints; j++) {
+      const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
+      const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
+      
+      if (extreme === 'all_min') {
+        q_sample[j] = lower;
+      } else if (extreme === 'all_max') {
+        q_sample[j] = upper;
+      } else if (extreme === 'alternating_even_min') {
+        q_sample[j] = (j % 2 === 0) ? lower : upper;
+      } else {
+        q_sample[j] = (j % 2 === 0) ? upper : lower;
+      }
+      v_sample[j] = velocity[j];
+    }
+    evaluateTorque(q_sample);
+  });
 
   return {
     max_torques,
