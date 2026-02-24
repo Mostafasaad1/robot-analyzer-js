@@ -104,45 +104,55 @@ export function solveInverseKinematics(
 }
 
 export function sampleMaxTorques(
-    pin: any,
-    model: any,
-    data: any,
-    positions: number[],
-    robotInfo: RobotInfo
+  pin: any,
+  model: any,
+  data: any,
+  positions: number[],
+  robotInfo: RobotInfo,
+  jointAcceleration: number = 0
 ): { max_torques: number[]; current_gravity_torques: number[]; joint_names: string[] } {
-    if (!pin || !model || !data) throw new Error("WASM not initialized");
+  if (!pin || !model || !data) throw new Error("WASM not initialized");
 
-    const numJoints = positions.length;
+  const numJoints = positions.length;
+  const nv = model.nv;
 
-    // 1. Current gravity torques
-    const q_current = new Float64Array(positions);
-    const g_current = pin.computeGeneralizedGravity(model, data, q_current);
-    const current_gravity_torques = Array.from(g_current) as number[];
+  // Create acceleration array with uniform joint acceleration
+  const acceleration = new Float64Array(nv);
+  for (let i = 0; i < nv; i++) {
+    acceleration[i] = jointAcceleration;
+  }
 
-    // 2. Monte Carlo sampling over joint limits to find peak torques
-    const max_torques: number[] = new Array(numJoints).fill(0);
-    const numSamples = 2000;
-    const q_rand = new Float64Array(numJoints);
+  // 1. Current gravity torques (with zero velocity and specified acceleration)
+  const q_current = new Float64Array(positions);
+  const v_current = new Float64Array(nv).fill(0);
+  const tau_current = pin.rnea(model, data, q_current, v_current, acceleration);
+  const current_gravity_torques = Array.from(tau_current) as number[];
 
-    for (let i = 0; i < numSamples; i++) {
-        for (let j = 0; j < numJoints; j++) {
-            const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
-            const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
-            q_rand[j] = lower + Math.random() * (upper - lower);
-        }
+  // 2. Monte Carlo sampling over joint limits to find peak torques
+  const max_torques: number[] = new Array(numJoints).fill(0);
+  const numSamples = 2000;
+  const q_rand = new Float64Array(nv);
+  const v_rand = new Float64Array(nv).fill(0);
 
-        const g_rand = pin.computeGeneralizedGravity(model, data, q_rand);
-        for (let j = 0; j < numJoints; j++) {
-            const absTorque = Math.abs(g_rand[j]);
-            if (absTorque > max_torques[j]) {
-                max_torques[j] = absTorque;
-            }
-        }
+  for (let i = 0; i < numSamples; i++) {
+    for (let j = 0; j < numJoints; j++) {
+      const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
+      const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
+      q_rand[j] = lower + Math.random() * (upper - lower);
     }
 
-    return {
-        max_torques,
-        current_gravity_torques,
-        joint_names: robotInfo.jointNames
-    };
+    const tau_rand = pin.rnea(model, data, q_rand, v_rand, acceleration);
+    for (let j = 0; j < numJoints; j++) {
+      const absTorque = Math.abs(tau_rand[j]);
+      if (absTorque > max_torques[j]) {
+        max_torques[j] = absTorque;
+      }
+    }
+  }
+
+  return {
+    max_torques,
+    current_gravity_torques,
+    joint_names: robotInfo.jointNames
+  };
 }

@@ -8,28 +8,29 @@ import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
 
 export function MaxTorquePanel() {
-    const { robotInfo, jointPositions } = useSessionStore();
-    const [maxTorques, setMaxTorques] = useState<number[] | null>(null);
-    const [gravityTorques, setGravityTorques] = useState<number[] | null>(null);
-    const [jointNames, setJointNames] = useState<string[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  const { robotInfo, jointPositions } = useSessionStore();
+  const [maxTorques, setMaxTorques] = useState<number[] | null>(null);
+  const [gravityTorques, setGravityTorques] = useState<number[] | null>(null);
+  const [jointNames, setJointNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [acceleration, setAcceleration] = useState<number>(0);
 
-    const handleCompute = async () => {
-        if (!robotInfo) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await apiService.computeMaxTorques(jointPositions);
-            setMaxTorques(result.max_torques);
-            setGravityTorques(result.current_gravity_torques);
-            setJointNames(result.joint_names);
-        } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCompute = async () => {
+    if (!robotInfo) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiService.computeMaxTorques(jointPositions, acceleration);
+      setMaxTorques(result.max_torques);
+      setGravityTorques(result.current_gravity_torques);
+      setJointNames(result.joint_names);
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     if (!robotInfo) {
         return (
@@ -43,13 +44,37 @@ export function MaxTorquePanel() {
     const globalMax = maxTorques ? Math.max(...maxTorques) : 1;
 
     return (
-        <div className="dynamics-panel">
-            <h3>📊 Max Dynamic Torques</h3>
-            <p className="panel-description">Peak torque each joint faces across workspace</p>
-
-            <button className="compute-btn" onClick={handleCompute} disabled={loading}>
-                {loading ? '⏳ Sampling workspace...' : '▶ Compute Max Torques'}
-            </button>
+      <div className="dynamics-panel">
+        <h3>📊 Max Dynamic Torques</h3>
+        <p className="panel-description">Peak torque each joint faces across workspace</p>
+  
+        <div className="input-group" style={{ marginBottom: '12px' }}>
+          <label htmlFor="acceleration" className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#a0a0a0' }}>
+            Joint Acceleration (rad/s²)
+          </label>
+          <input
+            id="acceleration"
+            type="number"
+            step="0.01"
+            value={acceleration}
+            onChange={(e) => setAcceleration(parseFloat(e.target.value) || 0)}
+            style={{
+              width: '100%',
+              padding: '8px 10px',
+              fontSize: '14px',
+              border: '1px solid #3a3a5a',
+              borderRadius: '6px',
+              background: '#2a2a3a',
+              color: '#ffffff',
+              boxSizing: 'border-box'
+            }}
+            placeholder="9.81"
+          />
+        </div>
+  
+        <button className="compute-btn" onClick={handleCompute} disabled={loading}>
+          {loading ? '⏳ Sampling workspace...' : '▶ Compute Max Torques'}
+        </button>
 
             {error && <div className="error-message">{error}</div>}
 
