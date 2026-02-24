@@ -14,6 +14,7 @@ export function MaxTorquePanel() {
   const [jointNames, setJointNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [velocity, setVelocity] = useState<number>(0);
   const [acceleration, setAcceleration] = useState<number>(0);
 
   const handleCompute = async () => {
@@ -21,7 +22,7 @@ export function MaxTorquePanel() {
     setLoading(true);
     setError(null);
     try {
-      const result = await apiService.computeMaxTorques(jointPositions, acceleration);
+      const result = await apiService.computeMaxTorques(jointPositions, velocity, acceleration);
       setMaxTorques(result.max_torques);
       setGravityTorques(result.current_gravity_torques);
       setJointNames(result.joint_names);
@@ -49,6 +50,30 @@ export function MaxTorquePanel() {
         <p className="panel-description">Peak torque each joint faces across workspace</p>
   
         <div className="input-group" style={{ marginBottom: '12px' }}>
+          <label htmlFor="velocity" className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#a0a0a0' }}>
+            Joint Velocity (rad/s)
+          </label>
+          <input
+            id="velocity"
+            type="number"
+            step="0.01"
+            value={velocity}
+            onChange={(e) => setVelocity(parseFloat(e.target.value) || 0)}
+            style={{
+              width: '100%',
+              padding: '8px 10px',
+              fontSize: '14px',
+              border: '1px solid #3a3a5a',
+              borderRadius: '6px',
+              background: '#2a2a3a',
+              color: '#ffffff',
+              boxSizing: 'border-box'
+            }}
+            placeholder="0"
+          />
+        </div>
+  
+        <div className="input-group" style={{ marginBottom: '12px' }}>
           <label htmlFor="acceleration" className="input-label" style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#a0a0a0' }}>
             Joint Acceleration (rad/s²)
           </label>
@@ -68,7 +93,7 @@ export function MaxTorquePanel() {
               color: '#ffffff',
               boxSizing: 'border-box'
             }}
-            placeholder="9.81"
+            placeholder="0"
           />
         </div>
   

@@ -109,6 +109,7 @@ export function sampleMaxTorques(
   data: any,
   positions: number[],
   robotInfo: RobotInfo,
+  jointVelocity: number = 0,
   jointAcceleration: number = 0
 ): { max_torques: number[]; current_gravity_torques: number[]; joint_names: string[] } {
   if (!pin || !model || !data) throw new Error("WASM not initialized");
@@ -116,29 +117,31 @@ export function sampleMaxTorques(
   const numJoints = positions.length;
   const nv = model.nv;
 
-  // Create acceleration array with uniform joint acceleration
+  // Create velocity and acceleration arrays with uniform values
+  const velocity = new Float64Array(nv);
   const acceleration = new Float64Array(nv);
   for (let i = 0; i < nv; i++) {
+    velocity[i] = jointVelocity;
     acceleration[i] = jointAcceleration;
   }
 
-  // 1. Current gravity torques (with zero velocity and specified acceleration)
+  // 1. Current torques (with specified velocity and acceleration)
   const q_current = new Float64Array(positions);
-  const v_current = new Float64Array(nv).fill(0);
-  const tau_current = pin.rnea(model, data, q_current, v_current, acceleration);
+  const tau_current = pin.rnea(model, data, q_current, velocity, acceleration);
   const current_gravity_torques = Array.from(tau_current) as number[];
 
   // 2. Monte Carlo sampling over joint limits to find peak torques
   const max_torques: number[] = new Array(numJoints).fill(0);
   const numSamples = 2000;
   const q_rand = new Float64Array(nv);
-  const v_rand = new Float64Array(nv).fill(0);
+  const v_rand = new Float64Array(nv);
 
   for (let i = 0; i < numSamples; i++) {
     for (let j = 0; j < numJoints; j++) {
       const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
       const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
       q_rand[j] = lower + Math.random() * (upper - lower);
+      v_rand[j] = jointVelocity;
     }
 
     const tau_rand = pin.rnea(model, data, q_rand, v_rand, acceleration);
