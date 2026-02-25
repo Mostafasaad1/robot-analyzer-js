@@ -8,10 +8,11 @@ import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
 
 export function MaxTorquePanel() {
-  const { robotInfo, jointPositions } = useSessionStore();
+  const { robotInfo, jointPositions, setJointPositions } = useSessionStore();
   const [maxTorques, setMaxTorques] = useState<number[] | null>(null);
   const [gravityTorques, setGravityTorques] = useState<number[] | null>(null);
   const [jointNames, setJointNames] = useState<string[]>([]);
+  const [maxTorqueConfig, setMaxTorqueConfig] = useState<number[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -39,10 +40,19 @@ export function MaxTorquePanel() {
       setMaxTorques(result.max_torques);
       setGravityTorques(result.current_gravity_torques);
       setJointNames(result.joint_names);
+      if (result.maxTorqueConfig) {
+        setMaxTorqueConfig(result.maxTorqueConfig);
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMoveToMaxTorque = () => {
+    if (maxTorqueConfig) {
+      setJointPositions(maxTorqueConfig);
     }
   };
 
@@ -197,37 +207,48 @@ export function MaxTorquePanel() {
           {loading ? '⏳ Sampling workspace...' : '▶ Compute Max Torques'}
         </button>
 
-            {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-            {maxTorques && (
-                <div className="dynamics-results">
-                    <h4>Max Torques (Gravity)</h4>
-                    {(jointNames.length > 0 ? jointNames : robotInfo.jointNames).map((name, i) => (
-                        <div key={i} className="result-row">
-                            <span className="result-label" title={name}>{name}</span>
-                            <div className="result-bar-container">
-                                <div
-                                    className="result-bar result-bar-max"
-                                    style={{ width: `${(maxTorques[i] / globalMax) * 100}%` }}
-                                />
-                                {gravityTorques && (
-                                    <div
-                                        className="result-bar result-bar-current"
-                                        style={{ width: `${(Math.abs(gravityTorques[i]) / globalMax) * 100}%` }}
-                                    />
-                                )}
-                            </div>
-                            <span className="result-value">{maxTorques[i].toFixed(4)} N·m</span>
-                        </div>
-                    ))}
-                    {gravityTorques && (
-                        <div className="legend">
-                            <span className="legend-item"><span className="legend-color legend-max"></span> Max across workspace</span>
-                            <span className="legend-item"><span className="legend-color legend-current"></span> Current config</span>
-                        </div>
-                    )}
-                </div>
+        {maxTorques && (
+          <div className="dynamics-results">
+            <h4>Max Torques (Gravity)</h4>
+
+            {maxTorqueConfig && (
+              <button
+                className="compute-btn"
+                onClick={handleMoveToMaxTorque}
+                style={{ marginBottom: '12px', background: '#059669' }}
+              >
+                🎯 Move to Max Torque Position
+              </button>
             )}
+
+            {(jointNames.length > 0 ? jointNames : robotInfo.jointNames).map((name, i) => (
+              <div key={i} className="result-row">
+                <span className="result-label" title={name}>{name}</span>
+                <div className="result-bar-container">
+                  <div
+                    className="result-bar result-bar-max"
+                    style={{ width: `${(maxTorques[i] / globalMax) * 100}%` }}
+                  />
+                  {gravityTorques && (
+                    <div
+                      className="result-bar result-bar-current"
+                      style={{ width: `${(Math.abs(gravityTorques[i]) / globalMax) * 100}%` }}
+                    />
+                  )}
+                </div>
+                <span className="result-value">{maxTorques[i].toFixed(4)} N·m</span>
+              </div>
+            ))}
+            {gravityTorques && (
+              <div className="legend">
+                <span className="legend-item"><span className="legend-color legend-max"></span> Max across workspace</span>
+                <span className="legend-item"><span className="legend-color legend-current"></span> Current config</span>
+              </div>
+            )}
+          </div>
+        )}
         </div>
     );
 }

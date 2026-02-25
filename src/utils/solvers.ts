@@ -111,7 +111,7 @@ export function sampleMaxTorques(
   robotInfo: RobotInfo,
   jointVelocities: number | number[] = 0,
   jointAccelerations: number | number[] = 0
-): { max_torques: number[]; current_gravity_torques: number[]; joint_names: string[] } {
+): { max_torques: number[]; current_gravity_torques: number[]; joint_names: string[]; maxTorqueConfig: number[] } {
   if (!pin || !model || !data) throw new Error("WASM not initialized");
 
   const numJoints = positions.length;
@@ -148,6 +148,7 @@ export function sampleMaxTorques(
 
   // 2. Fast hybrid sampling: corners + reduced random sampling
   const max_torques: number[] = new Array(numJoints).fill(0);
+  const maxTorqueConfig: number[] = new Array(numJoints).fill(0);
   const q_sample = new Float64Array(nv);
   const v_sample = new Float64Array(nv);
 
@@ -158,6 +159,10 @@ export function sampleMaxTorques(
       const absTorque = Math.abs(tau[j]);
       if (absTorque > max_torques[j]) {
         max_torques[j] = absTorque;
+        // Store the configuration that produces this max torque
+        for (let k = 0; k < numJoints; k++) {
+          maxTorqueConfig[k] = q[k];
+        }
       }
     }
   };
@@ -226,6 +231,7 @@ export function sampleMaxTorques(
   return {
     max_torques,
     current_gravity_torques,
-    joint_names: robotInfo.jointNames
+    joint_names: robotInfo.jointNames,
+    maxTorqueConfig
   };
 }

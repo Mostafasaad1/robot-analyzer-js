@@ -83,7 +83,7 @@ class APIService {
     positions: number[],
     jointVelocities: number | number[] = 0,
     jointAccelerations: number | number[] = 0
-  ): Promise<{ max_torques: number[]; current_gravity_torques: number[]; joint_names: string[] }> {
+  ): Promise<{ max_torques: number[]; current_gravity_torques: number[]; joint_names: string[]; maxTorqueConfig: number[] }> {
     if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
 
     const { useSessionStore } = await import('../stores/sessionStore');
