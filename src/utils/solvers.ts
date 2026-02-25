@@ -169,16 +169,17 @@ export function sampleMaxTorques(
 
   // Phase 1: Evaluate all joint limit corners (most critical points)
   // Torque usually peaks at joint limits due to gravity and leverage
+  // Tripled corner sampling: now covers first 6 joints instead of 4
   const corners = [];
-  const numCorners = Math.pow(2, Math.min(numJoints, 4)); // Limit to first 4 joints for corners
+  const numCorners = Math.pow(2, Math.min(numJoints, 6)); // Limit to first 6 joints for corners (64 corners max)
   
   for (let i = 0; i < numCorners; i++) {
     const mask = i;
     for (let j = 0; j < numJoints; j++) {
       const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
       const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
-      // Use limit or midpoint based on bit in mask (only for first 4 joints)
-      const useUpper = (j < 4) && ((mask >> j) & 1);
+      // Use limit based on bit in mask (for first 6 joints)
+      const useUpper = (j < 6) && ((mask >> j) & 1);
       q_sample[j] = useUpper ? upper : lower;
       v_sample[j] = velocity[j];
     }
@@ -186,8 +187,8 @@ export function sampleMaxTorques(
   }
 
   // Phase 2: Strategic grid sampling for interior points
-  // Use much fewer samples (100 instead of 2000) for speed
-  const gridSamples = 100;
+  // Tripled sampling: 300 samples (was 100)
+  const gridSamples = 300;
   for (let i = 0; i < gridSamples; i++) {
     for (let j = 0; j < numJoints; j++) {
       const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
@@ -201,27 +202,56 @@ export function sampleMaxTorques(
     evaluateTorque(q_sample);
   }
 
-  // Phase 3: Sample a few extreme configurations (all max, all min, alternating)
+  // Phase 3: Sample extreme configurations (tripled from 4 to 12 patterns)
   const extremes = [
+    // Original 4 patterns
     'all_min',
     'all_max',
     'alternating_even_min',
-    'alternating_odd_min'
+    'alternating_odd_min',
+    // Additional triple patterns
+    'all_25_percent',
+    'all_50_percent',
+    'all_75_percent',
+    'alternating_25_75',
+    'alternating_75_25',
+    'thirds_1',
+    'thirds_2',
+    'thirds_3'
   ];
 
   extremes.forEach(extreme => {
     for (let j = 0; j < numJoints; j++) {
       const lower = robotInfo.lowerLimits[j] !== undefined && robotInfo.lowerLimits[j] !== null ? robotInfo.lowerLimits[j] : -Math.PI;
       const upper = robotInfo.upperLimits[j] !== undefined && robotInfo.upperLimits[j] !== null ? robotInfo.upperLimits[j] : Math.PI;
-      
+      const range = upper - lower;
+
       if (extreme === 'all_min') {
         q_sample[j] = lower;
       } else if (extreme === 'all_max') {
         q_sample[j] = upper;
       } else if (extreme === 'alternating_even_min') {
         q_sample[j] = (j % 2 === 0) ? lower : upper;
-      } else {
+      } else if (extreme === 'alternating_odd_min') {
         q_sample[j] = (j % 2 === 0) ? upper : lower;
+      } else if (extreme === 'all_25_percent') {
+        q_sample[j] = lower + range * 0.25;
+      } else if (extreme === 'all_50_percent') {
+        q_sample[j] = lower + range * 0.5;
+      } else if (extreme === 'all_75_percent') {
+        q_sample[j] = lower + range * 0.75;
+      } else if (extreme === 'alternating_25_75') {
+        q_sample[j] = (j % 2 === 0) ? lower + range * 0.25 : lower + range * 0.75;
+      } else if (extreme === 'alternating_75_25') {
+        q_sample[j] = (j % 2 === 0) ? lower + range * 0.75 : lower + range * 0.25;
+      } else if (extreme === 'thirds_1') {
+        q_sample[j] = lower + range * (j % 3 === 0 ? 1 : 0);
+      } else if (extreme === 'thirds_2') {
+        q_sample[j] = lower + range * (j % 3 === 1 ? 1 : 0);
+      } else if (extreme === 'thirds_3') {
+        q_sample[j] = lower + range * (j % 3 === 2 ? 1 : 0);
+      } else {
+        q_sample[j] = lower;
       }
       v_sample[j] = velocity[j];
     }
