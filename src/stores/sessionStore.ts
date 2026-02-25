@@ -22,6 +22,21 @@ interface SessionState {
     com?: { x: number; y: number; z: number };
     lastComputed?: number;
   };
+  workspaceData: {
+    points?: number[][]; // Array of [x, y, z] positions
+    pointCount?: number;
+    boundingBox?: {
+      min: [number, number, number];
+      max: [number, number, number];
+    };
+    samplingMethod?: string;
+    numSamples?: number;
+    lastComputed?: number;
+    // Visualization settings
+    showWorkspace?: boolean;
+    workspaceColor?: string;
+    workspacePointSize?: number;
+  };
 
   // Actions
   setSession: (id: string, info: RobotInfo) => void;
@@ -31,6 +46,12 @@ interface SessionState {
   setAnimating: (animating: boolean) => void;
   updateComputedData: (data: Partial<SessionState['computedData']>) => void;
   clearComputedData: () => void;
+  // Workspace actions
+  setWorkspaceData: (data: Partial<SessionState['workspaceData']>) => void;
+  clearWorkspaceData: () => void;
+  toggleWorkspaceVisibility: () => void;
+  setWorkspaceColor: (color: string) => void;
+  setWorkspacePointSize: (size: number) => void;
 }
 
 // Create the store
@@ -43,6 +64,11 @@ export const useSessionStore = create<SessionState>()(
       jointVelocities: [],
       isAnimating: false,
       computedData: {},
+      workspaceData: {
+        showWorkspace: true,
+        workspaceColor: '#60a5fa', // blue-400
+        workspacePointSize: 0.08,
+      },
 
       setSession: (id, info) => set({
         sessionId: id,
@@ -76,6 +102,44 @@ export const useSessionStore = create<SessionState>()(
       })),
 
       clearComputedData: () => set({ computedData: {} }),
+
+      // Workspace actions
+      setWorkspaceData: (data) => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          ...data,
+          lastComputed: Date.now()
+        }
+      })),
+
+      clearWorkspaceData: () => set({
+        workspaceData: {
+          showWorkspace: true,
+          workspaceColor: '#60a5fa',
+          workspacePointSize: 0.08,
+        }
+      }),
+
+      toggleWorkspaceVisibility: () => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          showWorkspace: !state.workspaceData.showWorkspace
+        }
+      })),
+
+      setWorkspaceColor: (color) => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          workspaceColor: color
+        }
+      })),
+
+      setWorkspacePointSize: (size) => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          workspacePointSize: size
+        }
+      })),
     }),
     {
       name: 'robot-session',
@@ -240,3 +304,17 @@ export const useIsSessionReady = () => useSessionStore(selectIsSessionReady);
 export const useIsComputedDataFresh = () => useSessionStore(selectIsComputedDataFresh);
 export const useComputedDataSummary = () => useSessionStore(selectComputedDataSummary);
 export const useRobotName = () => useSessionStore(selectRobotName);
+
+// Workspace selectors
+export const selectWorkspaceData = (state: SessionState) => state.workspaceData;
+export const selectWorkspacePoints = (state: SessionState) => state.workspaceData.points;
+export const selectShowWorkspace = (state: SessionState) => state.workspaceData.showWorkspace;
+export const selectWorkspaceColor = (state: SessionState) => state.workspaceData.workspaceColor;
+export const selectWorkspacePointSize = (state: SessionState) => state.workspaceData.workspacePointSize;
+
+// Workspace hooks
+export const useWorkspaceData = () => useSessionStore(selectWorkspaceData);
+export const useWorkspacePoints = () => useSessionStore(selectWorkspacePoints);
+export const useShowWorkspace = () => useSessionStore(selectShowWorkspace);
+export const useWorkspaceColor = () => useSessionStore(selectWorkspaceColor);
+export const useWorkspacePointSize = () => useSessionStore(selectWorkspacePointSize);

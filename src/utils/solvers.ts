@@ -1,5 +1,17 @@
 import { RobotInfo } from '../types/robot';
 
+export interface WorkspaceResult {
+  points: number[][]; // Array of [x, y, z] positions
+  pointCount: number;
+  boundingBox: {
+    min: [number, number, number];
+    max: [number, number, number];
+  };
+  samplingMethod: string;
+  numSamples: number;
+}
+
+
 export function solveInverseKinematics(
     pin: any,
     model: any,
@@ -263,5 +275,58 @@ export function sampleMaxTorques(
     current_gravity_torques,
     joint_names: robotInfo.jointNames,
     maxTorqueConfig
+  };
+}
+
+export function sampleWorkspace(
+  pin: any,
+  model: any,
+  data: any,
+  robotInfo: RobotInfo,
+  numSamples: number = 2000,
+  method: 'random' = 'random'
+): WorkspaceResult {
+  if (!pin || !model || !data) throw new Error("WASM not initialized");
+
+  const nv = model.nv;
+  const q = new Float64Array(nv);
+  const points: number[][] = [];
+  let minX = Infinity, minY = Infinity, minZ = Infinity;
+  let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+
+  // Helper to evaluate one sample and record end-effector position
+  const evaluateSample = () => {
+    pin.forwardKinematics(model, data, q);
+    pin.updateFramePlacements(model, data); // Update frame placements for accurate joint positions
+    // Use the last joint as end-effector
+    const endEffectorId = model.njoints - 1;
+    const placement = pin.getJointPlacement(data, endEffectorId);
+    const pos = placement.translation;
+    points.push([pos[0], pos[1], pos[2]]);
+    // Update bounding box
+    if (pos[0] < minX) minX = pos[0];
+    if (pos[1] < minY) minY = pos[1];
+    if (pos[2] < minZ) minZ = pos[2];
+    if (pos[0] > maxX) maxX = pos[0];
+    if (pos[1] > maxY) maxY = pos[1];
+    if (pos[2] > maxZ) maxZ = pos[2];
+  };
+
+  // Generate random samples
+  for (let i = 0; i < numSamples; i++) {
+    for (let j = 0; j < nv; j++) {
+      const lower = robotInfo.lowerLimits[j] ?? -Math.PI;
+      const upper = robotInfo.upperLimits[j] ?? Math.PI;
+      q[j] = lower + Math.random() * (upper - lower);
+    }
+    evaluateSample();
+  }
+
+  return {
+    points,
+    pointCount: points.length,
+    boundingBox: { min: [minX, minY, minZ], max: [maxX, maxY, maxZ] },
+    samplingMethod: method,
+    numSamples: numSamples
   };
 }

@@ -21,6 +21,7 @@ import { ExportPanel } from './components/UI/ExportPanel';
 import { RobotLibraryPanel } from './components/UI/RobotLibraryPanel';
 import { FloatingPanelManager } from './components/UI/FloatingPanelManager';
 import { CollapsibleSection } from './components/UI/CollapsibleSection';
+import { WorkspacePanel } from './components/UI/WorkspacePanel';
 import { RobotViewer } from './components/Viewer/RobotViewer';
 import './App.css';
 import './components/UI/FloatingPanel.css';
@@ -156,6 +157,20 @@ function App() {
       defaultOpen: false,
       defaultMinimized: true,
       position: { x: 700, y: 80 }
+    },
+    {
+      id: 'workspace',
+      title: 'Workspace',
+      icon: '🔮',
+      accentColor: '#ec4899',
+      content: (
+        <CollapsibleSection title="Workspace" icon="🌍" accentColor="#ec4899" defaultOpen={false}>
+          <WorkspacePanel />
+        </CollapsibleSection>
+      ),
+      defaultOpen: false,
+      defaultMinimized: true,
+      position: { x: 700, y: 320 }
     },
   ];
 

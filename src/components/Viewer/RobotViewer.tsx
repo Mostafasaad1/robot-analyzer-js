@@ -2,14 +2,14 @@
  * 3D Robot Viewer using Three.js and React Three Fiber
  */
 
-import { useRef, useEffect, useState, Suspense } from 'react';
+import { useRef, useEffect, useState, Suspense, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid, Environment, ContactShadows, PerspectiveCamera, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import URDFLoader from 'urdf-loader';
-import { useSessionStore } from '../../stores/sessionStore';
+import { useSessionStore, selectWorkspacePoints, selectShowWorkspace, selectWorkspaceColor, selectWorkspacePointSize } from '../../stores/sessionStore';
 import { useFrame } from '@react-three/fiber';
 
 function RotatingWireframe() {
@@ -187,8 +187,47 @@ function RobotModel({ sessionId }: any) {
   );
 }
 
+// Workspace point cloud component
+interface WorkspacePointsProps {
+  points: number[][];
+  color: string;
+  size: number;
+}
+
+function WorkspacePoints({ points, color, size }: WorkspacePointsProps) {
+  const geometry = useMemo(() => {
+    const geom = new THREE.BufferGeometry();
+    const positions = new Float32Array(points.length * 3);
+    for (let i = 0; i < points.length; i++) {
+      const [x, y, z] = points[i];
+      // Transform from Pinocchio (Z-up) to Three.js (Y-up)
+      positions[i * 3] = x;
+      positions[i * 3 + 1] = z;
+      positions[i * 3 + 2] = -y;
+    }
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return geom;
+  }, [points]);
+
+  return (
+    <points geometry={geometry}>
+      <pointsMaterial
+        size={size}
+        color={color}
+        sizeAttenuation={true}
+        transparent
+        opacity={0.6}
+      />
+    </points>
+  );
+}
+
 function ViewerScene() {
   const sessionId = useSessionStore(state => state.sessionId);
+  const workspacePoints = useSessionStore(selectWorkspacePoints);
+  const showWorkspace = useSessionStore(selectShowWorkspace);
+  const workspaceColor = useSessionStore(selectWorkspaceColor);
+  const workspacePointSize = useSessionStore(selectWorkspacePointSize);
 
   if (!sessionId) {
     return (
@@ -235,6 +274,9 @@ function ViewerScene() {
       <RobotModel
         sessionId={sessionId}
       />
+      {showWorkspace && workspacePoints && workspacePoints.length > 0 && (
+        <WorkspacePoints points={workspacePoints} color={workspaceColor} size={workspacePointSize} />
+      )}
       <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={10} blur={2} />
       <Environment preset="city" background={false} />
     </group>

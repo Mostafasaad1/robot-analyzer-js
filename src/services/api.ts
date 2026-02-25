@@ -4,7 +4,7 @@
  */
 
 import { DynamicsResult } from '../types/robot';
-import { sampleMaxTorques, solveInverseKinematics } from '../utils/solvers';
+import { sampleMaxTorques, sampleWorkspace, solveInverseKinematics, WorkspaceResult } from '../utils/solvers';
 
 class APIService {
   public pin: any = null;
@@ -91,6 +91,22 @@ class APIService {
     if (!robotInfo) throw new Error("Robot info not available");
 
     return sampleMaxTorques(this.pin, this.model, this.data, positions, robotInfo, jointVelocities, jointAccelerations) as any;
+  }
+
+  /**
+   * Compute reachable workspace by sampling end-effector positions
+   */
+  async computeWorkspace(
+    numSamples: number = 2000,
+    method: 'random' = 'random'
+  ): Promise<WorkspaceResult> {
+    if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
+
+    const { useSessionStore } = await import('../stores/sessionStore');
+    const { robotInfo } = useSessionStore.getState();
+    if (!robotInfo) throw new Error("Robot info not available");
+
+    return sampleWorkspace(this.pin, this.model, this.data, robotInfo, numSamples, method);
   }
 
   /**

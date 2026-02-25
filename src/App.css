@@ -932,11 +932,13 @@
 .joint-control,
 .animation-panel,
 .dynamics-panel,
+.workspace-panel,
 .collapsible-inner .robot-upload,
 .collapsible-inner .robot-info,
 .collapsible-inner .joint-control,
 .collapsible-inner .animation-panel,
-.collapsible-inner .dynamics-panel {
+.collapsible-inner .dynamics-panel,
+.collapsible-inner .workspace-panel {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -1116,7 +1118,8 @@
 .robot-info:hover,
 .joint-control:hover,
 .animation-panel:hover,
-.dynamics-panel:hover {
+.dynamics-panel:hover,
+.workspace-panel:hover {
   border-color: var(--color-border-light);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -1134,7 +1137,8 @@
 .robot-info h3,
 .joint-control h3,
 .animation-panel h3,
-.dynamics-panel h3 {
+.dynamics-panel h3,
+.workspace-panel h3 {
   margin: 0 0 var(--spacing-md) 0;
   font-size: 12px;
   font-weight: 600;
@@ -1290,6 +1294,85 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Workspace Panel Toggle Button */
+.workspace-panel .toggle-btn {
+  padding: 4px 8px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.workspace-panel .toggle-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+.workspace-panel .toggle-btn.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+/* Workspace Clear Button */
+.workspace-panel .clear-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--spacing-sm);
+}
+
+.workspace-panel .clear-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.workspace-panel .clear-btn:active {
+  transform: translateY(0);
+}
+
+/* Workspace Stats */
+.workspace-panel .stats {
+  margin-top: var(--spacing-sm);
+  padding: 8px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.workspace-panel .stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.workspace-panel .stat:last-child {
+  margin-bottom: 0;
+}
+
+.workspace-panel .stat .label {
+  color: var(--color-text-muted);
+}
+
+.workspace-panel .stat .value {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--color-text-primary);
+  text-align: right;
+  word-break: break-all;
 }
 
 /* Animation Controls */
