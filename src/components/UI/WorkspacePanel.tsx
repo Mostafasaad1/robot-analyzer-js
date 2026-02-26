@@ -1,10 +1,11 @@
 /**
  * Workspace Visualization Panel
- * Computes and displays the robot's reachable workspace
+ * Computes and displays the robot's reachable workspace with boundary mesh
  */
 import React, { useState } from 'react';
-import { useSessionStore } from '../../stores/sessionStore';
+import { useSessionStore, selectBoundaryMethod } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { WorkspaceBoundaryOptions } from '../../utils/solvers';
 
 export function WorkspacePanel(): JSX.Element {
   const {
@@ -14,10 +15,14 @@ export function WorkspacePanel(): JSX.Element {
     toggleWorkspaceVisibility,
     setWorkspaceColor,
     setWorkspacePointSize,
+    toggleWorkspaceMeshVisibility,
+    setWorkspaceMeshColor,
+    setWorkspaceMeshOpacity,
   } = useSessionStore();
 
   const [numSamples, setNumSamples] = useState<number>(2000);
-  const [method, setMethod] = useState<'random'>('random');
+  const [boundaryMethod, setBoundaryMethod] = useState<WorkspaceBoundaryOptions['method']>('convex_hull');
+  const [alpha, setAlpha] = useState<number>(1.0);
   const [isComputing, setIsComputing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,13 +33,18 @@ export function WorkspacePanel(): JSX.Element {
     setIsComputing(true);
     setError(null);
     try {
-      const result = await apiService.computeWorkspace(numSamples, method);
+      const result = await apiService.computeWorkspaceWithBoundary(numSamples, {
+        method: boundaryMethod,
+        alpha: boundaryMethod === 'alpha_shape' ? alpha : undefined,
+      });
       setWorkspaceData({
         points: result.points,
         pointCount: result.pointCount,
         boundingBox: result.boundingBox,
         samplingMethod: result.samplingMethod,
         numSamples: result.numSamples,
+        boundaryMethod: boundaryMethod,
+        boundary: result.boundary,
       });
     } catch (err: any) {
       setError(err.message || 'Failed to compute workspace');
@@ -44,12 +54,21 @@ export function WorkspacePanel(): JSX.Element {
   };
 
   const handleClear = () => {
-    setWorkspaceData({ points: undefined, pointCount: undefined, boundingBox: undefined });
+    setWorkspaceData({
+      points: undefined,
+      pointCount: undefined,
+      boundingBox: undefined,
+      boundary: undefined,
+      boundaryMethod: undefined,
+    });
   };
 
   const showWorkspace = workspaceData?.showWorkspace ?? true;
-  const color = workspaceData?.workspaceColor ?? '#60a5fa';
+  const showMesh = workspaceData?.showWorkspaceMesh ?? true;
+  const pointColor = workspaceData?.workspaceColor ?? '#60a5fa';
   const pointSize = workspaceData?.workspacePointSize ?? 0.08;
+  const meshColor = workspaceData?.workspaceMeshColor ?? '#34d399';
+  const meshOpacity = workspaceData?.workspaceMeshOpacity ?? 0.3;
 
   const bbox = workspaceData?.boundingBox;
   const dimensions = bbox ? {
@@ -81,9 +100,10 @@ export function WorkspacePanel(): JSX.Element {
       </div>
 
       <div className="panel-content">
+        {/* Sampling Settings */}
         <div className="control-group">
-          <label>
-            <span>Samples:</span>
+          <label className="input-label">
+            <span>Samples</span>
             <input
               type="number"
               min="100"
@@ -92,9 +112,42 @@ export function WorkspacePanel(): JSX.Element {
               value={numSamples}
               onChange={(e) => setNumSamples(Math.max(100, Math.min(10000, parseInt(e.target.value) || 100)))}
               disabled={isComputing}
+              className="sample-input"
             />
           </label>
         </div>
+
+        <div className="control-group">
+          <label className="select-label">
+            <span>Boundary</span>
+            <select
+              value={boundaryMethod}
+              onChange={(e) => setBoundaryMethod(e.target.value as WorkspaceBoundaryOptions['method'])}
+              disabled={isComputing}
+            >
+              <option value="none">None (Points Only)</option>
+              <option value="convex_hull">Convex Hull</option>
+              <option value="alpha_shape">Alpha Shape</option>
+            </select>
+          </label>
+        </div>
+
+        {boundaryMethod === 'alpha_shape' && (
+          <div className="control-group">
+            <label className="slider-label">
+              <span>Alpha: {alpha.toFixed(2)}</span>
+              <input
+                type="range"
+                min="0.1"
+                max="5"
+                step="0.1"
+                value={alpha}
+                onChange={(e) => setAlpha(parseFloat(e.target.value))}
+                disabled={isComputing}
+              />
+            </label>
+          </div>
+        )}
 
         <div className="control-group">
           <button
@@ -118,10 +171,14 @@ export function WorkspacePanel(): JSX.Element {
         {workspaceData?.points && workspaceData.points.length > 0 && (
           <>
             <div className="divider"></div>
-            
+
+            {/* Point Visualization Controls */}
+            <div className="section-header">
+              <span>Points</span>
+            </div>
             <div className="control-group">
-              <label>
-                <span>Point Size:</span>
+              <label className="slider-label">
+                <span>Size</span>
                 <input
                   type="range"
                   min="0.01"
@@ -135,15 +192,65 @@ export function WorkspacePanel(): JSX.Element {
             </div>
 
             <div className="control-group">
-              <label>
-                <span>Color:</span>
+              <label className="color-label">
+                <span>Color</span>
                 <input
                   type="color"
-                  value={color}
+                  value={pointColor}
                   onChange={(e) => setWorkspaceColor(e.target.value)}
                 />
               </label>
             </div>
+
+            {/* Mesh Visualization Controls */}
+            {workspaceData.boundary && (
+              <>
+                <div className="section-header">
+                  <span>Boundary Mesh</span>
+                </div>
+                <div className="control-group">
+                  <label className="toggle-label">
+                    <span>Show Mesh</span>
+                    <button
+                      className={`toggle-smaller ${showMesh ? 'active' : ''}`}
+                      onClick={toggleWorkspaceMeshVisibility}
+                    >
+                      {showMesh ? 'ON' : 'OFF'}
+                    </button>
+                  </label>
+                </div>
+
+                {showMesh && (
+                  <>
+                    <div className="control-group">
+                      <label className="color-label">
+                        <span>Mesh Color</span>
+                        <input
+                          type="color"
+                          value={meshColor}
+                          onChange={(e) => setWorkspaceMeshColor(e.target.value)}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="control-group">
+                      <label className="slider-label">
+                        <span>Opacity</span>
+                        <input
+                          type="range"
+                          min="0.1"
+                          max="1"
+                          step="0.05"
+                          value={meshOpacity}
+                          onChange={(e) => setWorkspaceMeshOpacity(parseFloat(e.target.value))}
+                        />
+                        <span className="value">{(meshOpacity ?? 0.3).toFixed(2)}</span>
+                      </label>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
             <div className="control-group">
               <button className="clear-btn" onClick={handleClear}>
@@ -153,6 +260,7 @@ export function WorkspacePanel(): JSX.Element {
           </>
         )}
 
+        {/* Statistics */}
         {workspaceData?.points && (
           <div className="stats">
             <div className="stat">
@@ -169,6 +277,12 @@ export function WorkspacePanel(): JSX.Element {
               <div className="stat">
                 <span className="label">Method:</span>
                 <span className="value">{workspaceData.samplingMethod}</span>
+              </div>
+            )}
+            {workspaceData.boundaryMethod && workspaceData.boundaryMethod !== 'none' && (
+              <div className="stat">
+                <span className="label">Boundary:</span>
+                <span className="value">{workspaceData.boundaryMethod.replace('_', ' ')}</span>
               </div>
             )}
           </div>

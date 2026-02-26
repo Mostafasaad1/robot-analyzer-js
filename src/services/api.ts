@@ -4,7 +4,7 @@
  */
 
 import { DynamicsResult } from '../types/robot';
-import { sampleMaxTorques, sampleWorkspace, solveInverseKinematics, WorkspaceResult } from '../utils/solvers';
+import { sampleMaxTorques, sampleWorkspace, solveInverseKinematics, sampleWorkspaceWithBoundary, WorkspaceBoundaryOptions, WorkspaceResult } from '../utils/solvers';
 
 class APIService {
   public pin: any = null;
@@ -107,6 +107,22 @@ class APIService {
     if (!robotInfo) throw new Error("Robot info not available");
 
     return sampleWorkspace(this.pin, this.model, this.data, robotInfo, numSamples, method);
+  }
+
+  /**
+   * Compute reachable workspace with boundary mesh (convex hull or alpha shape)
+   */
+  async computeWorkspaceWithBoundary(
+    numSamples: number = 2000,
+    boundaryOptions: WorkspaceBoundaryOptions = { method: 'convex_hull' }
+  ): Promise<WorkspaceResult & { boundary?: { vertices: number[]; faces: number[] } }> {
+    if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
+
+    const { useSessionStore } = await import('../stores/sessionStore');
+    const { robotInfo } = useSessionStore.getState();
+    if (!robotInfo) throw new Error("Robot info not available");
+
+    return sampleWorkspaceWithBoundary(this.pin, this.model, this.data, robotInfo, numSamples, boundaryOptions);
   }
 
   /**

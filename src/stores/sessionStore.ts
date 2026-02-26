@@ -32,10 +32,19 @@ interface SessionState {
     samplingMethod?: string;
     numSamples?: number;
     lastComputed?: number;
+    // Boundary mesh (for hull visualization)
+    boundary?: {
+      vertices: number[];
+      faces: number[];
+    };
+    boundaryMethod?: 'none' | 'convex_hull' | 'alpha_shape';
     // Visualization settings
     showWorkspace?: boolean;
     workspaceColor?: string;
     workspacePointSize?: number;
+    showWorkspaceMesh?: boolean;
+    workspaceMeshColor?: string;
+    workspaceMeshOpacity?: number;
   };
 
   // Actions
@@ -52,6 +61,9 @@ interface SessionState {
   toggleWorkspaceVisibility: () => void;
   setWorkspaceColor: (color: string) => void;
   setWorkspacePointSize: (size: number) => void;
+  toggleWorkspaceMeshVisibility: () => void;
+  setWorkspaceMeshColor: (color: string) => void;
+  setWorkspaceMeshOpacity: (opacity: number) => void;
 }
 
 // Create the store
@@ -68,6 +80,9 @@ export const useSessionStore = create<SessionState>()(
         showWorkspace: true,
         workspaceColor: '#60a5fa', // blue-400
         workspacePointSize: 0.08,
+        showWorkspaceMesh: true,
+        workspaceMeshColor: '#34d399', // emerald-400
+        workspaceMeshOpacity: 0.3,
       },
 
       setSession: (id, info) => set({
@@ -117,15 +132,22 @@ export const useSessionStore = create<SessionState>()(
           showWorkspace: true,
           workspaceColor: '#60a5fa',
           workspacePointSize: 0.08,
+          showWorkspaceMesh: true,
+          workspaceMeshColor: '#34d399',
+          workspaceMeshOpacity: 0.3,
         }
       }),
 
-      toggleWorkspaceVisibility: () => set((state) => ({
-        workspaceData: {
-          ...state.workspaceData,
-          showWorkspace: !state.workspaceData.showWorkspace
-        }
-      })),
+  toggleWorkspaceVisibility: () => set((state) => {
+    const newShowState = !state.workspaceData.showWorkspace;
+    return {
+      workspaceData: {
+        ...state.workspaceData,
+        showWorkspace: newShowState,
+        showWorkspaceMesh: newShowState // Toggle mesh visibility together with points
+      }
+    };
+  }),
 
       setWorkspaceColor: (color) => set((state) => ({
         workspaceData: {
@@ -138,6 +160,27 @@ export const useSessionStore = create<SessionState>()(
         workspaceData: {
           ...state.workspaceData,
           workspacePointSize: size
+        }
+      })),
+
+      toggleWorkspaceMeshVisibility: () => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          showWorkspaceMesh: !state.workspaceData.showWorkspaceMesh
+        }
+      })),
+
+      setWorkspaceMeshColor: (color: string) => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          workspaceMeshColor: color
+        }
+      })),
+
+      setWorkspaceMeshOpacity: (opacity: number) => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          workspaceMeshOpacity: opacity
         }
       })),
     }),
@@ -311,6 +354,11 @@ export const selectWorkspacePoints = (state: SessionState) => state.workspaceDat
 export const selectShowWorkspace = (state: SessionState) => state.workspaceData.showWorkspace;
 export const selectWorkspaceColor = (state: SessionState) => state.workspaceData.workspaceColor;
 export const selectWorkspacePointSize = (state: SessionState) => state.workspaceData.workspacePointSize;
+export const selectWorkspaceBoundary = (state: SessionState) => state.workspaceData.boundary;
+export const selectBoundaryMethod = (state: SessionState) => state.workspaceData.boundaryMethod;
+export const selectShowWorkspaceMesh = (state: SessionState) => state.workspaceData.showWorkspaceMesh;
+export const selectWorkspaceMeshColor = (state: SessionState) => state.workspaceData.workspaceMeshColor;
+export const selectWorkspaceMeshOpacity = (state: SessionState) => state.workspaceData.workspaceMeshOpacity;
 
 // Workspace hooks
 export const useWorkspaceData = () => useSessionStore(selectWorkspaceData);
@@ -318,3 +366,8 @@ export const useWorkspacePoints = () => useSessionStore(selectWorkspacePoints);
 export const useShowWorkspace = () => useSessionStore(selectShowWorkspace);
 export const useWorkspaceColor = () => useSessionStore(selectWorkspaceColor);
 export const useWorkspacePointSize = () => useSessionStore(selectWorkspacePointSize);
+export const useWorkspaceBoundary = () => useSessionStore(selectWorkspaceBoundary);
+export const useBoundaryMethod = () => useSessionStore(selectBoundaryMethod);
+export const useShowWorkspaceMesh = () => useSessionStore(selectShowWorkspaceMesh);
+export const useWorkspaceMeshColor = () => useSessionStore(selectWorkspaceMeshColor);
+export const useWorkspaceMeshOpacity = () => useSessionStore(selectWorkspaceMeshOpacity);

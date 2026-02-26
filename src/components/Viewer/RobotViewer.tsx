@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import URDFLoader from 'urdf-loader';
-import { useSessionStore, selectWorkspacePoints, selectShowWorkspace, selectWorkspaceColor, selectWorkspacePointSize } from '../../stores/sessionStore';
+import { useSessionStore, selectWorkspacePoints, selectShowWorkspace, selectWorkspaceColor, selectWorkspacePointSize, selectWorkspaceBoundary, selectShowWorkspaceMesh, selectWorkspaceMeshColor, selectWorkspaceMeshOpacity } from '../../stores/sessionStore';
 import { useFrame } from '@react-three/fiber';
 
 function RotatingWireframe() {
@@ -222,12 +222,56 @@ function WorkspacePoints({ points, color, size }: WorkspacePointsProps) {
   );
 }
 
+// Workspace boundary mesh component
+interface WorkspaceMeshProps {
+  vertices: number[];
+  faces: number[];
+  color: string;
+  opacity: number;
+}
+
+function WorkspaceMesh({ vertices, faces, color, opacity }: WorkspaceMeshProps) {
+  const geometry = useMemo(() => {
+    const geom = new THREE.BufferGeometry();
+    // Transform vertices from Pinocchio (Z-up) to Three.js (Y-up)
+    const positions = new Float32Array(vertices.length);
+    for (let i = 0; i < vertices.length / 3; i++) {
+      const x = vertices[i * 3];
+      const y = vertices[i * 3 + 1];
+      const z = vertices[i * 3 + 2];
+      positions[i * 3] = x;
+      positions[i * 3 + 1] = z;
+      positions[i * 3 + 2] = -y;
+    }
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geom.setIndex(faces);
+    geom.computeVertexNormals();
+    return geom;
+  }, [vertices, faces]);
+
+  return (
+    <mesh geometry={geometry}>
+      <meshStandardMaterial
+        color={color}
+        transparent
+        opacity={opacity}
+        side={THREE.DoubleSide}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 function ViewerScene() {
   const sessionId = useSessionStore(state => state.sessionId);
   const workspacePoints = useSessionStore(selectWorkspacePoints);
   const showWorkspace = useSessionStore(selectShowWorkspace);
   const workspaceColor = useSessionStore(selectWorkspaceColor);
   const workspacePointSize = useSessionStore(selectWorkspacePointSize);
+  const workspaceBoundary = useSessionStore(selectWorkspaceBoundary);
+  const showWorkspaceMesh = useSessionStore(selectShowWorkspaceMesh);
+  const workspaceMeshColor = useSessionStore(selectWorkspaceMeshColor);
+  const workspaceMeshOpacity = useSessionStore(selectWorkspaceMeshOpacity);
 
   if (!sessionId) {
     return (
@@ -275,7 +319,15 @@ function ViewerScene() {
         sessionId={sessionId}
       />
       {showWorkspace && workspacePoints && workspacePoints.length > 0 && (
-        <WorkspacePoints points={workspacePoints} color={workspaceColor} size={workspacePointSize} />
+        <WorkspacePoints points={workspacePoints} color={workspaceColor!} size={workspacePointSize!} />
+      )}
+      {showWorkspaceMesh && workspaceBoundary?.vertices && workspaceBoundary?.faces && (
+        <WorkspaceMesh
+          vertices={workspaceBoundary.vertices}
+          faces={workspaceBoundary.faces}
+          color={workspaceMeshColor!}
+          opacity={workspaceMeshOpacity!}
+        />
       )}
       <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={10} blur={2} />
       <Environment preset="city" background={false} />

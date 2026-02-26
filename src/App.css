@@ -1296,9 +1296,225 @@
   text-overflow: ellipsis;
 }
 
+/* ===== Workspace Panel ===== */
+.workspace-panel .panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.workspace-panel .panel-header h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Improved Labels */
+.workspace-panel .input-label,
+.workspace-panel .select-label,
+.workspace-panel .slider-label,
+.workspace-panel .color-label,
+.workspace-panel .toggle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workspace-panel .input-label > span,
+.workspace-panel .select-label > span,
+.workspace-panel .slider-label > span,
+.workspace-panel .color-label > span,
+.workspace-panel .toggle-label > span {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.workspace-panel .slider-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workspace-panel .slider-label > span:first-child {
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.workspace-panel .slider-label > input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-panel .slider-label .value {
+  flex-shrink: 0;
+  min-width: 50px;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--color-accent-light);
+  background: var(--color-bg-secondary);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.workspace-panel .slider-label > span:not(:first-child):not(.value) {
+  flex-shrink: 0;
+  min-width: 40px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--color-accent-light);
+  text-align: right;
+}
+
+/* Enhanced Inputs */
+.workspace-panel .sample-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all var(--transition-fast);
+}
+
+.workspace-panel .sample-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.workspace-panel .sample-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Enhanced Select */
+.workspace-panel select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.workspace-panel select:hover {
+  border-color: var(--color-border-light);
+}
+
+.workspace-panel select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.workspace-panel select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Enhanced Color Picker */
+.workspace-panel input[type="color"] {
+  width: 100%;
+  height: 32px;
+  padding: 2px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.workspace-panel input[type="color"]:hover {
+  border-color: var(--color-accent);
+}
+
+.workspace-panel input[type="color"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* Enhanced Toggle */
+.workspace-panel .toggle-label {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workspace-panel .toggle-smaller,
+.workspace-panel .toggle-lg {
+  padding: 6px 14px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 50px;
+}
+
+.workspace-panel .toggle-smaller:hover,
+.workspace-panel .toggle-lg:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+.workspace-panel .toggle-smaller.active,
+.workspace-panel .toggle-lg.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.workspace-panel .toggle-lg {
+  padding: 10px 20px;
+  font-size: 13px;
+}
+
+/* Section Headers */
+.workspace-panel .section-header {
+  margin: 12px 0 8px 0;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.workspace-panel .section-header span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Divider */
+.workspace-panel .divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 12px 0;
+}
+
 /* Workspace Panel Toggle Button */
 .workspace-panel .toggle-btn {
-  padding: 4px 8px;
+  padding: 6px 12px;
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
@@ -1306,6 +1522,9 @@
   font-size: 12px;
   cursor: pointer;
   transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .workspace-panel .toggle-btn:hover {
