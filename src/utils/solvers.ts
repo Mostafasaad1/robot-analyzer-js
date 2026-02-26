@@ -1,4 +1,16 @@
 import { RobotInfo } from '../types/robot';
+// Re-export ray-casting module
+export type {
+  WorkspaceRayCastingResult,
+  WorkspaceRayCastingOptions
+} from './workspaceRayCasting';
+export {
+  generateSphericalRays,
+  findWorkspaceOrigin,
+  estimateMaxReach,
+  binarySearchBoundary,
+  sampleWorkspaceRayCasting
+} from './workspaceRayCasting';
 
 export interface WorkspaceResult {
   points: number[][]; // Array of [x, y, z] positions

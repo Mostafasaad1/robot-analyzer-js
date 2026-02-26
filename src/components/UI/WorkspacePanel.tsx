@@ -3,9 +3,8 @@
  * Computes and displays the robot's reachable workspace with boundary mesh
  */
 import React, { useState } from 'react';
-import { useSessionStore, selectBoundaryMethod } from '../../stores/sessionStore';
+import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
-import { WorkspaceBoundaryOptions } from '../../utils/solvers';
 
 export function WorkspacePanel(): JSX.Element {
   const {
@@ -18,11 +17,11 @@ export function WorkspacePanel(): JSX.Element {
     toggleWorkspaceMeshVisibility,
     setWorkspaceMeshColor,
     setWorkspaceMeshOpacity,
-  } = useSessionStore();
+    } = useSessionStore();
 
-  const [numSamples, setNumSamples] = useState<number>(2000);
-  const [boundaryMethod, setBoundaryMethod] = useState<WorkspaceBoundaryOptions['method']>('convex_hull');
-  const [alpha, setAlpha] = useState<number>(1.0);
+  // Ray-casting parameters
+  const [numRays, setNumRays] = useState<number>(500);
+  const [epsilon, setEpsilon] = useState<number>(0.001); // 1mm precision
   const [isComputing, setIsComputing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,17 +32,14 @@ export function WorkspacePanel(): JSX.Element {
     setIsComputing(true);
     setError(null);
     try {
-      const result = await apiService.computeWorkspaceWithBoundary(numSamples, {
-        method: boundaryMethod,
-        alpha: boundaryMethod === 'alpha_shape' ? alpha : undefined,
-      });
+      const result = await apiService.computeWorkspaceWithBoundary(numRays, epsilon);
       setWorkspaceData({
         points: result.points,
         pointCount: result.pointCount,
         boundingBox: result.boundingBox,
         samplingMethod: result.samplingMethod,
         numSamples: result.numSamples,
-        boundaryMethod: boundaryMethod,
+        boundaryMethod: 'ray_casting',
         boundary: result.boundary,
       });
     } catch (err: any) {
@@ -100,54 +96,36 @@ export function WorkspacePanel(): JSX.Element {
       </div>
 
       <div className="panel-content">
-        {/* Sampling Settings */}
+        {/* Ray-Casting Settings */}
         <div className="control-group">
-          <label className="input-label">
-            <span>Samples</span>
+          <label className="slider-label">
+            <span>Rays: {numRays}</span>
             <input
-              type="number"
+              type="range"
               min="100"
-              max="10000"
+              max="2000"
               step="100"
-              value={numSamples}
-              onChange={(e) => setNumSamples(Math.max(100, Math.min(10000, parseInt(e.target.value) || 100)))}
+              value={numRays}
+              onChange={(e) => setNumRays(parseInt(e.target.value))}
               disabled={isComputing}
-              className="sample-input"
             />
           </label>
         </div>
 
         <div className="control-group">
-          <label className="select-label">
-            <span>Boundary</span>
-            <select
-              value={boundaryMethod}
-              onChange={(e) => setBoundaryMethod(e.target.value as WorkspaceBoundaryOptions['method'])}
+          <label className="slider-label">
+            <span>Precision: {(epsilon * 1000).toFixed(1)} mm</span>
+            <input
+              type="range"
+              min="0.0001"
+              max="0.01"
+              step="0.0001"
+              value={epsilon}
+              onChange={(e) => setEpsilon(parseFloat(e.target.value))}
               disabled={isComputing}
-            >
-              <option value="none">None (Points Only)</option>
-              <option value="convex_hull">Convex Hull</option>
-              <option value="alpha_shape">Alpha Shape</option>
-            </select>
+            />
           </label>
         </div>
-
-        {boundaryMethod === 'alpha_shape' && (
-          <div className="control-group">
-            <label className="slider-label">
-              <span>Alpha: {alpha.toFixed(2)}</span>
-              <input
-                type="range"
-                min="0.1"
-                max="5"
-                step="0.1"
-                value={alpha}
-                onChange={(e) => setAlpha(parseFloat(e.target.value))}
-                disabled={isComputing}
-              />
-            </label>
-          </div>
-        )}
 
         <div className="control-group">
           <button
@@ -279,12 +257,12 @@ export function WorkspacePanel(): JSX.Element {
                 <span className="value">{workspaceData.samplingMethod}</span>
               </div>
             )}
-            {workspaceData.boundaryMethod && workspaceData.boundaryMethod !== 'none' && (
-              <div className="stat">
-                <span className="label">Boundary:</span>
-                <span className="value">{workspaceData.boundaryMethod.replace('_', ' ')}</span>
-              </div>
-            )}
+        {workspaceData.boundaryMethod && (
+          <div className="stat">
+            <span className="label">Method:</span>
+            <span className="value">{workspaceData.boundaryMethod.replace('_', ' ')}</span>
+          </div>
+        )}
           </div>
         )}
 

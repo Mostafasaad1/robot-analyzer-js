@@ -4,7 +4,7 @@
  */
 
 import { DynamicsResult } from '../types/robot';
-import { sampleMaxTorques, sampleWorkspace, solveInverseKinematics, sampleWorkspaceWithBoundary, WorkspaceBoundaryOptions, WorkspaceResult } from '../utils/solvers';
+import { sampleMaxTorques, solveInverseKinematics, sampleWorkspaceWithBoundary, WorkspaceBoundaryOptions, WorkspaceResult, sampleWorkspaceRayCasting, WorkspaceRayCastingResult } from '../utils/solvers';
 
 class APIService {
   public pin: any = null;
@@ -94,11 +94,12 @@ class APIService {
   }
 
   /**
-   * Compute reachable workspace by sampling end-effector positions
+   * Compute reachable workspace using ray-casting with binary search
+   * This provides accurate boundary detection by finding exact workspace limits
    */
   async computeWorkspace(
-    numSamples: number = 2000,
-    method: 'random' = 'random'
+    numRays: number = 500,
+    epsilon: number = 0.001
   ): Promise<WorkspaceResult> {
     if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
 
@@ -106,15 +107,19 @@ class APIService {
     const { robotInfo } = useSessionStore.getState();
     if (!robotInfo) throw new Error("Robot info not available");
 
-    return sampleWorkspace(this.pin, this.model, this.data, robotInfo, numSamples, method);
+    return sampleWorkspaceRayCasting(this.pin, this.model, this.data, robotInfo, {
+      numRays,
+      epsilon
+    });
   }
 
   /**
-   * Compute reachable workspace with boundary mesh (convex hull or alpha shape)
+   * Compute reachable workspace with boundary mesh using ray-casting
+   * Uses accurate ray-casting algorithm with convex hull for mesh generation
    */
   async computeWorkspaceWithBoundary(
-    numSamples: number = 2000,
-    boundaryOptions: WorkspaceBoundaryOptions = { method: 'convex_hull' }
+    numRays: number = 500,
+    epsilon: number = 0.001
   ): Promise<WorkspaceResult & { boundary?: { vertices: number[]; faces: number[] } }> {
     if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
 
@@ -122,7 +127,20 @@ class APIService {
     const { robotInfo } = useSessionStore.getState();
     if (!robotInfo) throw new Error("Robot info not available");
 
-    return sampleWorkspaceWithBoundary(this.pin, this.model, this.data, robotInfo, numSamples, boundaryOptions);
+    // Use ray-casting for accurate boundary points
+    const result = sampleWorkspaceRayCasting(this.pin, this.model, this.data, robotInfo, {
+      numRays,
+      epsilon
+    });
+
+    // Compute convex hull mesh from the boundary points
+    const { computeConvexHull } = await import('../utils/solvers');
+    const boundary = result.points.length >= 4 ? computeConvexHull(result.points) : undefined;
+
+    return {
+      ...result,
+      boundary
+    };
   }
 
   /**

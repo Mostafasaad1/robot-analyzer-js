@@ -37,7 +37,7 @@ interface SessionState {
       vertices: number[];
       faces: number[];
     };
-    boundaryMethod?: 'none' | 'convex_hull' | 'alpha_shape';
+    boundaryMethod?: 'none' | 'convex_hull' | 'alpha_shape' | 'ray_casting';
     // Visualization settings
     showWorkspace?: boolean;
     workspaceColor?: string;
