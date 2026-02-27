@@ -12,6 +12,9 @@ export {
   sampleWorkspaceRayCasting
 } from './workspaceRayCasting';
 
+import * as THREE from 'three';
+import { ConvexHull } from 'three/addons/math/ConvexHull.js';
+
 export interface WorkspaceResult {
   points: number[][]; // Array of [x, y, z] positions
   pointCount: number;
@@ -386,9 +389,9 @@ function vec3Normalize(v: Vec3): Vec3 {
 
 /**
  * Compute the boundary surface of a point cloud
- * Uses convex hull to find the outer shell, then filters to keep only boundary faces
+ * Uses Three.js ConvexHull (QuickHull algorithm) to find the outer shell
  * This creates a mesh that wraps around the outermost points
- * 
+ *
  * For ray-casting algorithms (which produce only boundary points), all points are included
  * For Monte Carlo algorithms (which produce scattered points), downsampling may be applied
  */
@@ -399,15 +402,48 @@ export function computeConvexHull(pointsArray: number[][], noDownsample: boolean
     return { vertices: pointsArray.flat(), faces: [] };
   }
 
-  // Convert to Vec3
   // For ray-casting: noDownsample=true ensures all boundary points are preserved
   // For Monte Carlo: downsample only if very large point cloud (> 5000 points)
-  const points: Vec3[] = (noDownsample || n <= 5000)
-    ? pointsArray.map(p => ({ x: p[0], y: p[1], z: p[2] }))
-    : downsamplePoints(pointsArray, 5000).map(p => ({ x: p[0], y: p[1], z: p[2] }));
+  const points = (noDownsample || n <= 5000)
+    ? pointsArray
+    : downsamplePoints(pointsArray, 5000);
 
-  // Use QuickHull to get the convex hull (outer boundary)
-  return quickHull3D(points);
+  // Use Three.js ConvexHull (QuickHull implementation)
+  // Create Vector3 points for the hull
+  const points3D = points.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+  
+  // Compute convex hull
+  const convexHull = new ConvexHull().setFromPoints(points3D);
+  
+  // Collect unique vertex indices from faces
+  const vertexIndices = new Set<number>();
+  convexHull.faces.forEach((face: any) => {
+    vertexIndices.add(face.a);
+    vertexIndices.add(face.b);
+    vertexIndices.add(face.c);
+  });
+  
+  // Create mapping from original index to new compact index
+  const indexMap = new Map<number, number>();
+  const outputVertices: number[] = [];
+  
+  vertexIndices.forEach((idx) => {
+    const newIdx = outputVertices.length / 3;
+    indexMap.set(idx, newIdx);
+    // Access vertex from the original points array
+    outputVertices.push(points3D[idx].x, points3D[idx].y, points3D[idx].z);
+  });
+  
+  // Build face indices using the mapped indices
+  const faces: number[] = [];
+  convexHull.faces.forEach((face: any) => {
+    const a = indexMap.get(face.a)!;
+    const b = indexMap.get(face.b)!;
+    const c = indexMap.get(face.c)!;
+    faces.push(a, b, c);
+  });
+
+  return { vertices: outputVertices, faces };
 }
 
 /**
