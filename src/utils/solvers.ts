@@ -388,22 +388,123 @@ function vec3Normalize(v: Vec3): Vec3 {
  * Compute the boundary surface of a point cloud
  * Uses convex hull to find the outer shell, then filters to keep only boundary faces
  * This creates a mesh that wraps around the outermost points
+ * 
+ * For ray-casting algorithms (which produce only boundary points), all points are included
+ * For Monte Carlo algorithms (which produce scattered points), downsampling may be applied
  */
-export function computeConvexHull(pointsArray: number[][]): { vertices: number[]; faces: number[] } {
+export function computeConvexHull(pointsArray: number[][], noDownsample: boolean = false): { vertices: number[]; faces: number[] } {
   const n = pointsArray.length;
 
   if (n < 4) {
     return { vertices: pointsArray.flat(), faces: [] };
   }
 
-  // Convert to Vec3 - keep more points for accurate boundary
-  // Only downsample if very large point cloud (> 2000 points)
-  const points: Vec3[] = n > 2000
-    ? downsamplePoints(pointsArray, 2000).map(p => ({ x: p[0], y: p[1], z: p[2] }))
-    : pointsArray.map(p => ({ x: p[0], y: p[1], z: p[2] }));
+  // Convert to Vec3
+  // For ray-casting: noDownsample=true ensures all boundary points are preserved
+  // For Monte Carlo: downsample only if very large point cloud (> 5000 points)
+  const points: Vec3[] = (noDownsample || n <= 5000)
+    ? pointsArray.map(p => ({ x: p[0], y: p[1], z: p[2] }))
+    : downsamplePoints(pointsArray, 5000).map(p => ({ x: p[0], y: p[1], z: p[2] }));
 
   // Use QuickHull to get the convex hull (outer boundary)
   return quickHull3D(points);
+}
+
+/**
+ * Compute boundary mesh that includes ALL input points as vertices.
+ * This is designed for ray-casting algorithms where all points are on the boundary surface.
+ * Strategy: Use convex hull for the base mesh, then ensure all points are included as vertices.
+ * Non-hull points are connected to the hull by finding their nearest hull face.
+ */
+export function computeBoundaryMeshAllPoints(pointsArray: number[][]): { vertices: number[]; faces: number[] } {
+  const n = pointsArray.length;
+
+  if (n < 4) {
+    return { vertices: pointsArray.flat(), faces: [] };
+  }
+
+  // Convert to Vec3
+  const points: Vec3[] = pointsArray.map(p => ({ x: p[0], y: p[1], z: p[2] }));
+
+  // Step 1: Compute convex hull to get outer shell
+  const hullResult = quickHull3D(points);
+  const hullVertices = hullResult.vertices;
+  const hullFaces = hullResult.faces;
+  const hullVertexCount = hullVertices.length / 3;
+  const hullFaceCount = hullFaces.length / 3;
+
+  // If hull already includes almost all points, return it directly
+  if (hullVertexCount >= n - 1) {
+    return hullResult;
+  }
+
+  // Step 2: Identify which original points are hull vertices
+  // Build a map from coordinate string to hull vertex index
+  const hullVertexSet = new Set<string>();
+  for (let i = 0; i < hullVertexCount; i++) {
+    const idx = i * 3;
+    const key = `${hullVertices[idx]},${hullVertices[idx + 1]},${hullVertices[idx + 2]}`;
+    hullVertexSet.add(key);
+  }
+
+  // Mark each point as hull or non-hull
+  const isHullVertex: boolean[] = new Array(n).fill(false);
+  for (let i = 0; i < n; i++) {
+    const key = `${pointsArray[i][0]},${pointsArray[i][1]},${pointsArray[i][2]}`;
+    if (hullVertexSet.has(key)) {
+      isHullVertex[i] = true;
+    }
+  }
+
+  // Step 3: For non-hull points, find the nearest hull face and create connections
+  // All points (hull and non-hull) will be vertices in the output
+  const vertices: number[] = pointsArray.flat();
+  const faces: number[] = [...hullFaces]; // Start with hull faces
+
+  // For each non-hull point, connect it to nearby hull faces
+  for (let i = 0; i < n; i++) {
+    if (isHullVertex[i]) continue;
+
+    const p = points[i];
+    let nearestFaceIdx = -1;
+    let minDistSq = Infinity;
+
+    // Find the hull face closest to this point
+    for (let f = 0; f < hullFaceCount; f++) {
+      const faceIdx = f * 3;
+      const a = hullFaces[faceIdx];
+      const b = hullFaces[faceIdx + 1];
+      const c = hullFaces[faceIdx + 2];
+
+      // Compute distance from point to triangle centroid
+      const centroid = {
+        x: (points[a].x + points[b].x + points[c].x) / 3,
+        y: (points[a].y + points[b].y + points[c].y) / 3,
+        z: (points[a].z + points[b].z + points[c].z) / 3
+      };
+      const distSq = (p.x - centroid.x) ** 2 + (p.y - centroid.y) ** 2 + (p.z - centroid.z) ** 2;
+
+      if (distSq < minDistSq) {
+        minDistSq = distSq;
+        nearestFaceIdx = f;
+      }
+    }
+
+    if (nearestFaceIdx !== -1) {
+      // Connect this point to the three vertices of the nearest face
+      const faceIdx = nearestFaceIdx * 3;
+      const a = hullFaces[faceIdx];
+      const b = hullFaces[faceIdx + 1];
+      const c = hullFaces[faceIdx + 2];
+
+      // Add three triangles connecting the point to each edge of the face
+      faces.push(a, b, i);
+      faces.push(b, c, i);
+      faces.push(c, a, i);
+    }
+  }
+
+  return { vertices, faces };
 }
 
 /**

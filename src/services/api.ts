@@ -4,7 +4,7 @@
  */
 
 import { DynamicsResult } from '../types/robot';
-import { sampleMaxTorques, solveInverseKinematics, sampleWorkspaceWithBoundary, WorkspaceBoundaryOptions, WorkspaceResult, sampleWorkspaceRayCasting, WorkspaceRayCastingResult } from '../utils/solvers';
+import { sampleMaxTorques, solveInverseKinematics, WorkspaceResult, sampleWorkspaceRayCasting } from '../utils/solvers';
 
 class APIService {
   public pin: any = null;
@@ -116,27 +116,29 @@ class APIService {
   /**
    * Compute reachable workspace with boundary mesh using ray-casting
    * Uses accurate ray-casting algorithm with convex hull for mesh generation
+   * Ray-casting produces only boundary points, so all points are preserved for accurate mesh
    */
   async computeWorkspaceWithBoundary(
     numRays: number = 500,
     epsilon: number = 0.001
   ): Promise<WorkspaceResult & { boundary?: { vertices: number[]; faces: number[] } }> {
     if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
-
+  
     const { useSessionStore } = await import('../stores/sessionStore');
     const { robotInfo } = useSessionStore.getState();
     if (!robotInfo) throw new Error("Robot info not available");
-
+  
     // Use ray-casting for accurate boundary points
     const result = sampleWorkspaceRayCasting(this.pin, this.model, this.data, robotInfo, {
       numRays,
       epsilon
     });
-
+  
     // Compute convex hull mesh from the boundary points
+    // Pass true for noDownsample since ray-casting already produces only boundary points
     const { computeConvexHull } = await import('../utils/solvers');
-    const boundary = result.points.length >= 4 ? computeConvexHull(result.points) : undefined;
-
+    const boundary = result.points.length >= 4 ? computeConvexHull(result.points, true) : undefined;
+  
     return {
       ...result,
       boundary
