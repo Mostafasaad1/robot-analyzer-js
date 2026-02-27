@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 import URDFLoader from 'urdf-loader';
-import { useSessionStore, selectWorkspacePoints, selectShowWorkspace, selectWorkspaceColor, selectWorkspacePointSize, selectWorkspaceBoundary, selectShowWorkspaceMesh, selectWorkspaceMeshColor, selectWorkspaceMeshOpacity } from '../../stores/sessionStore';
+import { useSessionStore, selectWorkspacePoints, selectShowWorkspace, selectWorkspaceColor, selectWorkspacePointSize, selectWorkspaceBoundary, selectShowWorkspaceMesh, selectWorkspaceMeshColor, selectWorkspaceMeshOpacity, selectWorkspaceMeshStyle } from '../../stores/sessionStore';
 import { useFrame } from '@react-three/fiber';
 
 function RotatingWireframe() {
@@ -228,9 +228,10 @@ interface WorkspaceMeshProps {
   faces: number[];
   color: string;
   opacity: number;
+  meshStyle: 'solid' | 'wireframe' | 'network';
 }
 
-function WorkspaceMesh({ vertices, faces, color, opacity }: WorkspaceMeshProps) {
+function WorkspaceMesh({ vertices, faces, color, opacity, meshStyle }: WorkspaceMeshProps) {
   const geometry = useMemo(() => {
     const geom = new THREE.BufferGeometry();
     // Transform vertices from Pinocchio (Z-up) to Three.js (Y-up)
@@ -249,6 +250,20 @@ function WorkspaceMesh({ vertices, faces, color, opacity }: WorkspaceMeshProps) 
     return geom;
   }, [vertices, faces]);
 
+  // Network style: render only edges as line segments
+  const edgesGeometry = useMemo(() => {
+    if (meshStyle !== 'network') return null;
+    return new THREE.EdgesGeometry(geometry);
+  }, [geometry, meshStyle]);
+
+  if (meshStyle === 'network') {
+    return (
+      <lineSegments geometry={edgesGeometry!}>
+        <lineBasicMaterial color={color} transparent opacity={opacity} linewidth={1} />
+      </lineSegments>
+    );
+  }
+
   return (
     <mesh geometry={geometry}>
       <meshStandardMaterial
@@ -257,6 +272,7 @@ function WorkspaceMesh({ vertices, faces, color, opacity }: WorkspaceMeshProps) 
         opacity={opacity}
         side={THREE.DoubleSide}
         depthWrite={false}
+        wireframe={meshStyle === 'wireframe'}
       />
     </mesh>
   );
@@ -272,6 +288,7 @@ function ViewerScene() {
   const showWorkspaceMesh = useSessionStore(selectShowWorkspaceMesh);
   const workspaceMeshColor = useSessionStore(selectWorkspaceMeshColor);
   const workspaceMeshOpacity = useSessionStore(selectWorkspaceMeshOpacity);
+  const workspaceMeshStyle = useSessionStore(selectWorkspaceMeshStyle);
 
   if (!sessionId) {
     return (
@@ -327,6 +344,7 @@ function ViewerScene() {
           faces={workspaceBoundary.faces}
           color={workspaceMeshColor!}
           opacity={workspaceMeshOpacity!}
+          meshStyle={workspaceMeshStyle as 'solid' | 'wireframe' | 'network'}
         />
       )}
       <ContactShadows position={[0, 0, 0]} opacity={0.5} scale={10} blur={2} />

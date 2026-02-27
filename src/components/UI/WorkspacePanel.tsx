@@ -17,7 +17,8 @@ export function WorkspacePanel(): JSX.Element {
     toggleWorkspaceMeshVisibility,
     setWorkspaceMeshColor,
     setWorkspaceMeshOpacity,
-    } = useSessionStore();
+    setWorkspaceMeshStyle,
+  } = useSessionStore();
 
   // Ray-casting parameters
   const [numRays, setNumRays] = useState<number>(500);
@@ -65,6 +66,7 @@ export function WorkspacePanel(): JSX.Element {
   const pointSize = workspaceData?.workspacePointSize ?? 0.08;
   const meshColor = workspaceData?.workspaceMeshColor ?? '#34d399';
   const meshOpacity = workspaceData?.workspaceMeshOpacity ?? 0.3;
+  const meshStyle = (workspaceData?.workspaceMeshStyle ?? 'solid') as 'solid' | 'wireframe' | 'network';
 
   const bbox = workspaceData?.boundingBox;
   const dimensions = bbox ? {
@@ -201,8 +203,26 @@ export function WorkspacePanel(): JSX.Element {
                 {showMesh && (
                   <>
                     <div className="control-group">
+                      <label className="toggle-label">
+                        <span>Style</span>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          {(['solid', 'wireframe', 'network'] as const).map((s) => (
+                            <button
+                              key={s}
+                              className={`toggle-smaller ${meshStyle === s ? 'active' : ''}`}
+                              onClick={() => setWorkspaceMeshStyle(s)}
+                              style={{ textTransform: 'capitalize', minWidth: '56px' }}
+                            >
+                              {s === 'solid' ? '◼ Solid' : s === 'wireframe' ? '⬡ Grid' : '⬡ Network'}
+                            </button>
+                          ))}
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="control-group">
                       <label className="color-label">
-                        <span>Mesh Color</span>
+                        <span>Color</span>
                         <input
                           type="color"
                           value={meshColor}
@@ -211,20 +231,22 @@ export function WorkspacePanel(): JSX.Element {
                       </label>
                     </div>
 
-                    <div className="control-group">
-                      <label className="slider-label">
-                        <span>Opacity</span>
-                        <input
-                          type="range"
-                          min="0.1"
-                          max="1"
-                          step="0.05"
-                          value={meshOpacity}
-                          onChange={(e) => setWorkspaceMeshOpacity(parseFloat(e.target.value))}
-                        />
-                        <span className="value">{(meshOpacity ?? 0.3).toFixed(2)}</span>
-                      </label>
-                    </div>
+                    {meshStyle !== 'network' && (
+                      <div className="control-group">
+                        <label className="slider-label">
+                          <span>Opacity</span>
+                          <input
+                            type="range"
+                            min="0.1"
+                            max="1"
+                            step="0.05"
+                            value={meshOpacity}
+                            onChange={(e) => setWorkspaceMeshOpacity(parseFloat(e.target.value))}
+                          />
+                          <span className="value">{(meshOpacity ?? 0.3).toFixed(2)}</span>
+                        </label>
+                      </div>
+                    )}
                   </>
                 )}
               </>
@@ -257,12 +279,12 @@ export function WorkspacePanel(): JSX.Element {
                 <span className="value">{workspaceData.samplingMethod}</span>
               </div>
             )}
-        {workspaceData.boundaryMethod && (
-          <div className="stat">
-            <span className="label">Method:</span>
-            <span className="value">{workspaceData.boundaryMethod.replace('_', ' ')}</span>
-          </div>
-        )}
+            {workspaceData.boundaryMethod && (
+              <div className="stat">
+                <span className="label">Method:</span>
+                <span className="value">{workspaceData.boundaryMethod.replace('_', ' ')}</span>
+              </div>
+            )}
           </div>
         )}
 

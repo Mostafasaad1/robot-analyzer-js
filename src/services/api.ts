@@ -114,31 +114,63 @@ class APIService {
   }
 
   /**
-   * Compute reachable workspace with boundary mesh using ray-casting
-   * Uses accurate ray-casting algorithm with convex hull for mesh generation
-   * Ray-casting produces only boundary points, so all points are preserved for accurate mesh
+   * Compute reachable workspace with boundary mesh using ray-casting.
+   * Uses THREE.ConvexGeometry for a correct, complete convex hull — the
+   * previous custom QuickHull3D silently dropped near-coplanar boundary
+   * points (epsilon 1e-9 too tight for workspace scale).
    */
   async computeWorkspaceWithBoundary(
     numRays: number = 500,
     epsilon: number = 0.001
   ): Promise<WorkspaceResult & { boundary?: { vertices: number[]; faces: number[] } }> {
     if (!this.pin || !this.model || !this.data) throw new Error("WASM not initialized");
-  
+
     const { useSessionStore } = await import('../stores/sessionStore');
     const { robotInfo } = useSessionStore.getState();
     if (!robotInfo) throw new Error("Robot info not available");
-  
+
     // Use ray-casting for accurate boundary points
     const result = sampleWorkspaceRayCasting(this.pin, this.model, this.data, robotInfo, {
       numRays,
       epsilon
     });
-  
-    // Compute convex hull mesh from the boundary points
-    // Pass true for noDownsample since ray-casting already produces only boundary points
-    const { computeConvexHull } = await import('../utils/solvers');
-    const boundary = result.points.length >= 4 ? computeConvexHull(result.points, true) : undefined;
-  
+
+    let boundary: { vertices: number[]; faces: number[] } | undefined;
+
+    if (result.points.length >= 4) {
+      try {
+        // THREE.ConvexGeometry is battle-tested and correctly handles near-coplanar points.
+        const THREE = await import('three');
+        const { ConvexGeometry } = await import('three/examples/jsm/geometries/ConvexGeometry.js');
+
+        // Note: points stay in Pinocchio coordinates here; the viewer transforms on render.
+        const threePoints = result.points.map(([x, y, z]) => new THREE.Vector3(x, y, z));
+        const convexGeom = new ConvexGeometry(threePoints);
+
+        const posAttr = convexGeom.getAttribute('position');
+        const rawVerts: number[] = [];
+        for (let i = 0; i < posAttr.count; i++) {
+          rawVerts.push(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
+        }
+
+        // ConvexGeometry may be indexed or non-indexed depending on Three.js version
+        let faceIndices: number[];
+        if (convexGeom.index) {
+          faceIndices = Array.from(convexGeom.index.array) as number[];
+        } else {
+          faceIndices = Array.from({ length: posAttr.count }, (_, i) => i);
+        }
+
+        boundary = { vertices: rawVerts, faces: faceIndices };
+        convexGeom.dispose();
+      } catch (err) {
+        // Fallback to the custom implementation if import fails
+        console.warn('ConvexGeometry failed, using custom hull as fallback:', err);
+        const { computeConvexHull } = await import('../utils/solvers');
+        boundary = computeConvexHull(result.points, true);
+      }
+    }
+
     return {
       ...result,
       boundary

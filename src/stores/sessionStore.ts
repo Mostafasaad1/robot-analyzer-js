@@ -45,6 +45,7 @@ interface SessionState {
     showWorkspaceMesh?: boolean;
     workspaceMeshColor?: string;
     workspaceMeshOpacity?: number;
+    workspaceMeshStyle?: 'solid' | 'wireframe' | 'network';
   };
 
   // Actions
@@ -64,6 +65,7 @@ interface SessionState {
   toggleWorkspaceMeshVisibility: () => void;
   setWorkspaceMeshColor: (color: string) => void;
   setWorkspaceMeshOpacity: (opacity: number) => void;
+  setWorkspaceMeshStyle: (style: 'solid' | 'wireframe' | 'network') => void;
 }
 
 // Create the store
@@ -83,6 +85,7 @@ export const useSessionStore = create<SessionState>()(
         showWorkspaceMesh: true,
         workspaceMeshColor: '#34d399', // emerald-400
         workspaceMeshOpacity: 0.3,
+        workspaceMeshStyle: 'solid' as const,
       },
 
       setSession: (id, info) => set({
@@ -135,19 +138,20 @@ export const useSessionStore = create<SessionState>()(
           showWorkspaceMesh: true,
           workspaceMeshColor: '#34d399',
           workspaceMeshOpacity: 0.3,
+          workspaceMeshStyle: 'solid' as const,
         }
       }),
 
-  toggleWorkspaceVisibility: () => set((state) => {
-    const newShowState = !state.workspaceData.showWorkspace;
-    return {
-      workspaceData: {
-        ...state.workspaceData,
-        showWorkspace: newShowState,
-        showWorkspaceMesh: newShowState // Toggle mesh visibility together with points
-      }
-    };
-  }),
+      toggleWorkspaceVisibility: () => set((state) => {
+        const newShowState = !state.workspaceData.showWorkspace;
+        return {
+          workspaceData: {
+            ...state.workspaceData,
+            showWorkspace: newShowState,
+            showWorkspaceMesh: newShowState // Toggle mesh visibility together with points
+          }
+        };
+      }),
 
       setWorkspaceColor: (color) => set((state) => ({
         workspaceData: {
@@ -181,6 +185,13 @@ export const useSessionStore = create<SessionState>()(
         workspaceData: {
           ...state.workspaceData,
           workspaceMeshOpacity: opacity
+        }
+      })),
+
+      setWorkspaceMeshStyle: (style: 'solid' | 'wireframe' | 'network') => set((state) => ({
+        workspaceData: {
+          ...state.workspaceData,
+          workspaceMeshStyle: style
         }
       })),
     }),
@@ -359,6 +370,7 @@ export const selectBoundaryMethod = (state: SessionState) => state.workspaceData
 export const selectShowWorkspaceMesh = (state: SessionState) => state.workspaceData.showWorkspaceMesh;
 export const selectWorkspaceMeshColor = (state: SessionState) => state.workspaceData.workspaceMeshColor;
 export const selectWorkspaceMeshOpacity = (state: SessionState) => state.workspaceData.workspaceMeshOpacity;
+export const selectWorkspaceMeshStyle = (state: SessionState) => state.workspaceData.workspaceMeshStyle ?? 'solid';
 
 // Workspace hooks
 export const useWorkspaceData = () => useSessionStore(selectWorkspaceData);
@@ -371,3 +383,4 @@ export const useBoundaryMethod = () => useSessionStore(selectBoundaryMethod);
 export const useShowWorkspaceMesh = () => useSessionStore(selectShowWorkspaceMesh);
 export const useWorkspaceMeshColor = () => useSessionStore(selectWorkspaceMeshColor);
 export const useWorkspaceMeshOpacity = () => useSessionStore(selectWorkspaceMeshOpacity);
+export const useWorkspaceMeshStyle = () => useSessionStore(selectWorkspaceMeshStyle);
