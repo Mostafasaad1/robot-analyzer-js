@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 export function ForwardDynamicsPanel() {
     const { robotInfo, jointPositions } = useSessionStore();
@@ -47,7 +48,7 @@ export function ForwardDynamicsPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>🔄 Forward Dynamics</h3>
+                <h3>🔄 Forward Dynamics <InfoTooltip title="Forward Dynamics">Compute joint accelerations from applied torques using Pinocchio's ABA algorithm.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -55,7 +56,7 @@ export function ForwardDynamicsPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>🔄 Forward Dynamics</h3>
+            <h3>🔄 Forward Dynamics <InfoTooltip title="Forward Dynamics">Compute joint accelerations from applied torques using Pinocchio's ABA algorithm.</InfoTooltip></h3>
             <p className="panel-description">Torque → Acceleration (ABA)</p>
 
             <div className="dynamics-inputs">

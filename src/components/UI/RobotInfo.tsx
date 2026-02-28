@@ -3,24 +3,25 @@
  */
 
 import { useSessionStore } from '../../stores/sessionStore';
+import { InfoTooltip } from './InfoTooltip';
 
 export function RobotInfo() {
-  const { robotInfo, sessionId } = useSessionStore();
+    const { robotInfo, sessionId } = useSessionStore();
 
-  if (!robotInfo) {
+    if (!robotInfo) {
+        return (
+            <div className="robot-info">
+                <h3>ℹ️ Robot Info <InfoTooltip title="Robot Info">Displays basic robot properties: name, degrees of freedom, joint count, and loaded joint names.</InfoTooltip></h3>
+                <div className="empty-state-mini">
+                    <p>No robot loaded</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-      <div className="robot-info">
-        <h3>ℹ️ Robot Info</h3>
-        <div className="empty-state-mini">
-          <p>No robot loaded</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="robot-info">
-      <h3>ℹ️ Robot Info</h3>
+        <div className="robot-info">
+            <h3>ℹ️ Robot Info <InfoTooltip title="Robot Info">Displays basic robot properties: name, degrees of freedom, joint count, and loaded joint names.</InfoTooltip></h3>
       <div className="info-grid">
         <div className="info-item">
           <span className="label">Name</span>

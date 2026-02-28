@@ -6,3 +6,4 @@ export { FloatingPanel } from './FloatingPanel';
 export { FloatingPanelManager } from './FloatingPanelManager';
 export { CollapsibleSection } from './CollapsibleSection';
 export { WorkspacePanel } from './WorkspacePanel';
+export { InfoTooltip } from './InfoTooltip';

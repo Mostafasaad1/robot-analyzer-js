@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 interface ComData {
     com: number[];
@@ -36,7 +37,7 @@ export function CenterOfMassPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>🎯 Center of Mass</h3>
+                <h3>🎯 Center of Mass <InfoTooltip title="Center of Mass">Compute the overall center of mass position and display per-link mass distribution.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -44,7 +45,7 @@ export function CenterOfMassPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>🎯 Center of Mass</h3>
+            <h3>🎯 Center of Mass <InfoTooltip title="Center of Mass">Compute the overall center of mass position and display per-link mass distribution.</InfoTooltip></h3>
             <p className="panel-description">CoM position and mass distribution</p>
 
             <button className="compute-btn" onClick={handleCompute} disabled={loading}>

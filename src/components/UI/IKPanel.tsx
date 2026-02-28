@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 interface IKResult {
     positions: number[];
@@ -49,7 +50,7 @@ export function InverseKinematicsPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>🎯 Inverse Kinematics</h3>
+                <h3>🎯 Inverse Kinematics <InfoTooltip title="Inverse Kinematics">Specify a target end-effector position (X, Y, Z) to compute the required joint angles.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -57,7 +58,7 @@ export function InverseKinematicsPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>🎯 Inverse Kinematics</h3>
+            <h3>🎯 Inverse Kinematics <InfoTooltip title="Inverse Kinematics">Specify a target end-effector position (X, Y, Z) to compute the required joint angles.</InfoTooltip></h3>
             <p className="panel-description">Target position → joint angles</p>
 
             <div className="ik-inputs">

@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { apiService } from '../../services/api';
 import { useSessionStore } from '../../stores/sessionStore';
+import { InfoTooltip } from './InfoTooltip';
 
 const PRESETS = [
     { label: '⬇ Floor', icon: '⬇', gravity: [0, 0, -9.81] },
@@ -46,7 +47,7 @@ export function GravityPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>🌍 Gravity</h3>
+                <h3>🌍 Gravity <InfoTooltip title="Gravity">Apply gravity effects to the robot. Default Earth gravity is -9.81 m/s² on the Z axis.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -54,7 +55,7 @@ export function GravityPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>🌍 Gravity</h3>
+            <h3>🌍 Gravity <InfoTooltip title="Gravity">Apply gravity effects to the robot. Default Earth gravity is -9.81 m/s² on the Z axis.</InfoTooltip></h3>
             <p className="panel-description">Change gravity direction for dynamics</p>
 
             <div className="gravity-presets">

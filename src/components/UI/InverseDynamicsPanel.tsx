@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 export function InverseDynamicsPanel() {
     const { robotInfo, jointPositions } = useSessionStore();
@@ -47,7 +48,7 @@ export function InverseDynamicsPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>⚙️ Inverse Dynamics</h3>
+                <h3>⚙️ Inverse Dynamics <InfoTooltip title="Inverse Dynamics">Compute joint torques from desired accelerations using Pinocchio's RNEA algorithm.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -55,7 +56,7 @@ export function InverseDynamicsPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>⚙️ Inverse Dynamics</h3>
+            <h3>⚙️ Inverse Dynamics <InfoTooltip title="Inverse Dynamics">Compute joint torques from desired accelerations using Pinocchio's RNEA algorithm.</InfoTooltip></h3>
             <p className="panel-description">Acceleration → Torque (RNEA)</p>
 
             <div className="dynamics-inputs">

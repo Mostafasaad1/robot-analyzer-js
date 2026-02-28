@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 interface MassMatrixData {
     mass_matrix: number[][];
@@ -37,7 +38,7 @@ export function MassMatrixPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>📐 Mass Matrix</h3>
+                <h3>📐 Mass Matrix <InfoTooltip title="Mass Matrix">Compute the joint-space inertia matrix M(q), effective inertia (diagonal), and condition number.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -45,7 +46,7 @@ export function MassMatrixPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>📐 Mass Matrix</h3>
+            <h3>📐 Mass Matrix <InfoTooltip title="Mass Matrix">Compute the joint-space inertia matrix M(q), effective inertia (diagonal), and condition number.</InfoTooltip></h3>
             <p className="panel-description">Joint-space inertia matrix M(q)</p>
 
             <button className="compute-btn" onClick={handleCompute} disabled={loading}>

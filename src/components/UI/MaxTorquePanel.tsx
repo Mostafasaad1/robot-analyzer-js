@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 export function MaxTorquePanel() {
   const { robotInfo, jointPositions, setJointPositions } = useSessionStore();
@@ -75,7 +76,7 @@ export function MaxTorquePanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>📊 Max Dynamic Torques</h3>
+                <h3>📊 Max Dynamic Torques <InfoTooltip title="Max Dynamic Torques">Find the worst-case joint torques by sampling the workspace with specified velocities and accelerations.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -85,7 +86,7 @@ export function MaxTorquePanel() {
 
     return (
       <div className="dynamics-panel">
-        <h3>📊 Max Dynamic Torques</h3>
+        <h3>📊 Max Dynamic Torques <InfoTooltip title="Max Dynamic Torques">Find the worst-case joint torques by sampling the workspace with specified velocities and accelerations.</InfoTooltip></h3>
         <p className="panel-description">Peak torque each joint faces across workspace</p>
   
         <div className="input-group" style={{ marginBottom: '12px' }}>

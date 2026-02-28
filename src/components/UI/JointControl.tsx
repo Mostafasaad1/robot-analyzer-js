@@ -3,6 +3,7 @@
  */
 
 import { useSessionStore } from '../../stores/sessionStore';
+import { InfoTooltip } from './InfoTooltip';
 
 interface JointControlProps {
   onJointChange?: (index: number, value: number) => void;
@@ -14,7 +15,7 @@ export function JointControl({ onJointChange }: JointControlProps) {
   if (!robotInfo) {
     return (
       <div className="joint-control">
-        <h3>Joint Controls</h3>
+        <h3>Joint Controls <InfoTooltip title="Joint Controls">Manually adjust each joint's position using sliders. Values are in radians.</InfoTooltip></h3>
         <p>No robot loaded</p>
       </div>
     );
@@ -32,7 +33,7 @@ export function JointControl({ onJointChange }: JointControlProps) {
 
   return (
     <div className="joint-control">
-      <h3>Joint Controls</h3>
+      <h3>Joint Controls <InfoTooltip title="Joint Controls">Manually adjust each joint's position using sliders. Values are in radians.</InfoTooltip></h3>
       <div className="joint-sliders">
         {robotInfo.jointNames.map((name: string, index: number) => (
           <div key={name} className="joint-slider">

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { useAnimation } from '../../hooks/useAnimation';
 import { AnimationPattern } from '../../types/robot';
+import { InfoTooltip } from './InfoTooltip';
 
 export function AnimationPanel() {
   const { startAnimation, stopAnimation, pauseAnimation } = useAnimation();
@@ -32,8 +33,8 @@ export function AnimationPanel() {
 
   return (
     <div className="animation-panel">
-      <h3>Animation</h3>
-      
+      <h3>Animation <InfoTooltip title="Animation">Animate robot joints using various patterns: Sine Wave, Circular, Wave, or Random motion.</InfoTooltip></h3>
+
       <div className="animation-controls">
         <div className="control-group">
           <label>Pattern</label>

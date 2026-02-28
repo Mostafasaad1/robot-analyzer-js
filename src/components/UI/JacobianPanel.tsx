@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 interface JacobianData {
     jacobian: number[][];
@@ -37,7 +38,7 @@ export function JacobianPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>🧮 Jacobian</h3>
+                <h3>🧮 Jacobian <InfoTooltip title="Jacobian">Compute the 6×n Jacobian matrix, manipulability score, and singular values at the current configuration.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -47,7 +48,7 @@ export function JacobianPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>🧮 Jacobian</h3>
+            <h3>🧮 Jacobian <InfoTooltip title="Jacobian">Compute the 6×n Jacobian matrix, manipulability score, and singular values at the current configuration.</InfoTooltip></h3>
             <p className="panel-description">6×n matrix mapping joint velocities to end-effector velocity</p>
 
             <button className="compute-btn" onClick={handleCompute} disabled={loading}>

@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 export function ExportPanel() {
     const { sessionId, robotInfo } = useSessionStore();
@@ -99,7 +100,7 @@ export function ExportPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>📊 Export Report</h3>
+                <h3>📊 Export Report <InfoTooltip title="Export Report">Download the complete robot analysis as JSON, CSV, or PDF format for documentation and sharing.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -107,7 +108,7 @@ export function ExportPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>📊 Export Report</h3>
+            <h3>📊 Export Report <InfoTooltip title="Export Report">Download the complete robot analysis as JSON, CSV, or PDF format for documentation and sharing.</InfoTooltip></h3>
             <p className="panel-description">Download comprehensive analysis</p>
 
             <div className="export-buttons">

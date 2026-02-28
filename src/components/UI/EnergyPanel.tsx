@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 interface EnergyData {
     kinetic_energy: number;
@@ -49,7 +50,7 @@ export function EnergyPanel() {
     if (!robotInfo) {
         return (
             <div className="dynamics-panel">
-                <h3>⚡ Energy</h3>
+                <h3>⚡ Energy <InfoTooltip title="Energy">Compute kinetic, potential, and total energy at the current configuration with specified joint velocities.</InfoTooltip></h3>
                 <div className="empty-state-mini">Load a robot first</div>
             </div>
         );
@@ -59,7 +60,7 @@ export function EnergyPanel() {
 
     return (
         <div className="dynamics-panel">
-            <h3>⚡ Energy</h3>
+            <h3>⚡ Energy <InfoTooltip title="Energy">Compute kinetic, potential, and total energy at the current configuration with specified joint velocities.</InfoTooltip></h3>
             <p className="panel-description">Kinetic + Potential energy at current config</p>
 
             <div className="dynamics-inputs">

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useRobotSession } from '../../hooks/useRobotSession';
 import { extractRobotPackage, validateRobotPackage } from '../../utils/zipExtractor';
 import { parseURDF } from '../../utils/urdfParser';
+import { InfoTooltip } from './InfoTooltip';
 
 export function RobotUpload() {
   const { createSession } = useRobotSession();
@@ -93,7 +94,29 @@ export function RobotUpload() {
 
   return (
     <div className="robot-upload">
-      <h3>📁 Upload Robot</h3>
+      <h3>
+        📁 Upload Robot
+        <InfoTooltip
+          title="Required ZIP Structure"
+          position="right"
+        >
+          <p>The ZIP file should contain:</p>
+          <ul>
+            <li><code>.urdf</code> or <code>.xacro</code> robot description file</li>
+            <li><code>meshes/</code> folder with STL or DAE files</li>
+            <li>Optional: <code>urdf/</code> subfolder for URDF files</li>
+          </ul>
+          <pre>
+robot_description.zip
+├── robot.urdf
+└── meshes/
+    ├── link1.stl
+    ├── link2.stl
+    └── ...
+          </pre>
+          <p><strong>Note:</strong> The URDF file should reference mesh files using relative paths like <code>package://meshes/link1.stl</code> or <code>meshes/link1.stl</code></p>
+        </InfoTooltip>
+      </h3>
       <div
         className={`upload-area ${dragActive ? 'drag-active' : ''}`}
         onDragEnter={handleDrag}

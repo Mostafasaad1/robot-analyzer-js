@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { apiService } from '../../services/api';
+import { InfoTooltip } from './InfoTooltip';
 
 export function WorkspacePanel(): JSX.Element {
   const {
@@ -78,7 +79,7 @@ export function WorkspacePanel(): JSX.Element {
   if (!robotInfo) {
     return (
       <div className="workspace-panel">
-        <h3>🔮 Workspace</h3>
+        <h3>🔮 Workspace <InfoTooltip title="Workspace">Compute and visualize the robot's reachable workspace using ray-casting to find accurate boundary surfaces.</InfoTooltip></h3>
         <div className="empty-state-mini">Load a robot first</div>
       </div>
     );
@@ -87,7 +88,7 @@ export function WorkspacePanel(): JSX.Element {
   return (
     <div className="workspace-panel">
       <div className="panel-header">
-        <h3>🔮 Workspace</h3>
+        <h3>🔮 Workspace <InfoTooltip title="Workspace">Compute and visualize the robot's reachable workspace using ray-casting to find accurate boundary surfaces.</InfoTooltip></h3>
         <button
           className={`toggle-btn ${showWorkspace ? 'active' : ''}`}
           onClick={toggleWorkspaceVisibility}

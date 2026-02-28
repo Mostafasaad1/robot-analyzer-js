@@ -1,0 +1,142 @@
+/* Info Tooltip Component */
+.info-tooltip-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  isolation: isolate;
+}
+
+.info-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  transition: all 0.2s ease;
+  user-select: none;
+  line-height: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-icon:hover,
+.info-icon:focus {
+  background: rgba(59, 130, 246, 0.2);
+  color: #2563eb;
+  transform: scale(1.1);
+}
+
+.info-icon:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Tooltip panel (rendered via Portal to document.body) */
+.info-tooltip-tooltip-panel {
+  position: fixed;
+  background: rgba(17, 24, 39, 0.98);
+  color: #f9fafb;
+  padding: 12px 16px;
+  padding-right: 36px; /* Extra space for close button */
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 320px;
+  max-height: 70vh;
+  overflow-y: auto;
+  z-index: 999999;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  /* Position at top-right side of viewport */
+  top: 70px;
+  right: 20px;
+}
+
+.info-tooltip-tooltip-panel.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Close button */
+.tooltip-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f9fafb;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.tooltip-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Title and content styling */
+.info-tooltip-title {
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.info-tooltip-content {
+  color: #d1d5db;
+}
+
+.info-tooltip-content p {
+  margin: 8px 0;
+}
+
+.info-tooltip-content p:first-child {
+  margin-top: 0;
+}
+
+.info-tooltip-content ul {
+  margin: 8px 0;
+  padding-left: 16px;
+}
+
+.info-tooltip-content li {
+  margin: 4px 0;
+}
+
+.info-tooltip-content strong {
+  color: #f9fafb;
+  font-weight: 600;
+}
+
+.info-tooltip-content code {
+  background: rgba(59, 130, 246, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 12px;
+  color: #93c5fd;
+}
+
+.info-tooltip-content pre {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 12px;
+  margin: 8px 0;
+}

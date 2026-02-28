@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useRobotSession } from '../../hooks/useRobotSession';
 import { extractRobotPackage, validateRobotPackage } from '../../utils/zipExtractor';
+import { InfoTooltip } from './InfoTooltip';
 
 interface LibraryRobot {
     filename: string;
@@ -81,24 +82,24 @@ export function RobotLibraryPanel() {
         }
     };
 
-    return (
-        <div className="dynamics-panel">
-            <div
-                className="panel-header"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                style={{
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    userSelect: 'none'
-                }}
-            >
-                <h3 style={{ margin: 0 }}>📚 Robot Library</h3>
-                <span style={{ fontSize: '1.2em', color: '#64748b' }}>
-                    {isCollapsed ? '▶' : '▼'}
-                </span>
-            </div>
+  return (
+    <div className="dynamics-panel">
+      <div
+        className="panel-header"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          userSelect: 'none'
+        }}
+      >
+        <h3 style={{ margin: 0 }}>📚 Robot Library <InfoTooltip title="Robot Library">Select from pre-loaded industrial robot models including ABB, KUKA, Franka, and Stäubli.</InfoTooltip></h3>
+        <span style={{ fontSize: '1.2em', color: '#64748b' }}>
+          {isCollapsed ? '▶' : '▼'}
+        </span>
+      </div>
 
             {!isCollapsed && (
                 <>
