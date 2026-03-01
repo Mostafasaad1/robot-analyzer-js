@@ -44,6 +44,17 @@ export function MaxTorquePanel() {
       if (result.maxTorqueConfig) {
         setMaxTorqueConfig(result.maxTorqueConfig);
       }
+
+      // Update session store for PDF export
+      const { useSessionStore } = await import('../../stores/sessionStore');
+      useSessionStore.getState().updateComputedData({
+        maxTorques: {
+          maxTorques: result.max_torques,
+          gravityTorques: result.current_gravity_torques,
+          jointNames: result.joint_names,
+          config: result.maxTorqueConfig
+        }
+      });
     } catch (err: any) {
       setError(err.response?.data?.error || err.message);
     } finally {

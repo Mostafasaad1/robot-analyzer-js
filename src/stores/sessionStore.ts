@@ -20,6 +20,13 @@ interface SessionState {
     massMatrix?: number[][];
     jacobian?: number[][];
     com?: { x: number; y: number; z: number };
+    forwardDynamics?: { accelerations: number[] };
+    maxTorques?: {
+      maxTorques: number[];
+      gravityTorques: number[];
+      jointNames: string[];
+      config?: number[];
+    };
     lastComputed?: number;
   };
   workspaceData: {

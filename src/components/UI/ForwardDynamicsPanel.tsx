@@ -27,23 +27,29 @@ export function ForwardDynamicsPanel() {
         setTorques(newTorques);
     };
 
-    const handleCompute = async () => {
-        if (!robotInfo) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await apiService.computeForwardDynamics(
-                jointPositions,
-                new Array(dof).fill(0), // zero velocity
-                torques
-            );
-            setAccelerations(result.accelerations);
-        } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCompute = async () => {
+    if (!robotInfo) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiService.computeForwardDynamics(
+        jointPositions,
+        new Array(dof).fill(0), // zero velocity
+        torques
+      );
+      setAccelerations(result.accelerations);
+      
+    // Update session store for PDF export
+    const { useSessionStore } = await import('../../stores/sessionStore');
+    useSessionStore.getState().updateComputedData({
+      forwardDynamics: { accelerations: result.accelerations }
+    });
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     if (!robotInfo) {
         return (

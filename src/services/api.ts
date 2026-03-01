@@ -5,6 +5,7 @@
 
 import { DynamicsResult } from '../types/robot';
 import { sampleMaxTorques, solveInverseKinematics, WorkspaceResult, sampleWorkspaceRayCasting } from '../utils/solvers';
+import { generatePDFReport, captureCanvasScreenshot } from '../utils/pdfGenerator';
 
 class APIService {
   public pin: any = null;
@@ -293,29 +294,101 @@ class APIService {
   }
 
   // Generate Reports entirely in browser
-  async exportReport(_sessionId: string, format: string, _screenshot?: string): Promise<any> {
+  async exportReport(_sessionId: string, format: string, screenshot?: string): Promise<any> {
     // Dynamic import of store to avoid circular issues
     const { useSessionStore } = await import('../stores/sessionStore');
     const state = useSessionStore.getState();
-    const { robotInfo, jointPositions } = state;
+    const { robotInfo, jointPositions, workspaceData, computedData } = state;
+
+    // Debug: Log what data we have
+    console.log('Export Report - computedData:', computedData);
+    console.log('Export Report - workspaceData:', workspaceData);
 
     if (format === 'json') {
       return {
         robot: robotInfo?.name,
         dof: robotInfo?.dof,
         joint_names: robotInfo?.jointNames,
-        current_positions: jointPositions
+        current_positions: jointPositions,
+        computed_data: computedData,
+        workspace: workspaceData?.boundingBox ? {
+          dimensions: {
+            x: (workspaceData.boundingBox.max[0] - workspaceData.boundingBox.min[0]),
+            y: (workspaceData.boundingBox.max[1] - workspaceData.boundingBox.min[1]),
+            z: (workspaceData.boundingBox.max[2] - workspaceData.boundingBox.min[2]),
+          },
+          pointCount: workspaceData.pointCount
+        } : undefined,
+        timestamp: new Date().toISOString()
       };
     } else if (format === 'csv') {
       let csv = `Robot Name,${robotInfo?.name}\n`;
-      csv += `Degrees of Freedom,${robotInfo?.dof}\n\n`;
-      csv += `Joint,Position (rad)\n`;
+      csv += `Degrees of Freedom,${robotInfo?.dof}\n`;
+      csv += `Generated,${new Date().toISOString()}\n\n`;
+      csv += `Joint,Position (rad),Position (deg)\n`;
       robotInfo?.jointNames.forEach((name, i) => {
-        csv += `${name},${jointPositions[i]}\n`;
+        const pos = jointPositions[i] ?? 0;
+        csv += `${name},${pos.toFixed(6)},${(pos * 180 / Math.PI).toFixed(2)}\n`;
       });
+      
+      // Add computed data if available
+      if (computedData?.torques) {
+        csv += `\nInverse Dynamics (Torques)\n`;
+        csv += `Joint,Torque (N·m)\n`;
+        robotInfo?.jointNames.forEach((name, i) => {
+          csv += `${name},${computedData.torques![i]?.toFixed(6) || 'N/A'}\n`;
+        });
+      }
+      
+      if (computedData?.energy) {
+        csv += `\nEnergy Analysis\n`;
+        csv += `Kinetic Energy,${computedData.energy.kinetic?.toFixed(6) || 'N/A'} J\n`;
+        csv += `Potential Energy,${computedData.energy.potential?.toFixed(6) || 'N/A'} J\n`;
+      }
+      
+      if (computedData?.com) {
+        csv += `\nCenter of Mass\n`;
+        csv += `X,${computedData.com.x?.toFixed(6) || 'N/A'} m\n`;
+        csv += `Y,${computedData.com.y?.toFixed(6) || 'N/A'} m\n`;
+        csv += `Z,${computedData.com.z?.toFixed(6) || 'N/A'} m\n`;
+      }
+      
       return csv;
+    } else if (format === 'pdf') {
+      // Capture screenshot if not provided
+      let screenshotData = screenshot;
+      if (!screenshotData) {
+        screenshotData = await captureCanvasScreenshot(1280, 0.85) || undefined;
+      }
+      
+        // Generate PDF with all computed data
+        const pdfBlob = await generatePDFReport({
+          robotInfo: robotInfo!,
+          jointPositions: jointPositions,
+          computedData: {
+            torques: computedData?.torques,
+            energy: computedData?.energy ? {
+              kinetic: computedData.energy.kinetic,
+              potential: computedData.energy.potential,
+              total: (computedData.energy.kinetic || 0) + (computedData.energy.potential || 0)
+            } : undefined,
+            massMatrix: computedData?.massMatrix,
+            jacobian: computedData?.jacobian,
+            com: computedData?.com,
+            forwardDynamics: computedData?.forwardDynamics,
+            maxTorques: computedData?.maxTorques,
+            lastComputed: computedData?.lastComputed
+          },
+          workspaceData: workspaceData ? {
+            pointCount: workspaceData.pointCount,
+            boundingBox: workspaceData.boundingBox
+          } : undefined,
+          screenshot: screenshotData
+        });
+      
+      return pdfBlob;
     } else {
-      throw new Error("PDF export requires a backend or jspdf library. Please use CSV or JSON for offline mode.");
+      throw new Error(`Unsupported export format: ${format}`);
     }
   }
 

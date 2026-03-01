@@ -21,19 +21,23 @@ export function JacobianPanel() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleCompute = async () => {
-        if (!robotInfo) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await apiService.computeJacobian(jointPositions);
-            setData(result);
-        } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCompute = async () => {
+    if (!robotInfo) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiService.computeJacobian(jointPositions);
+      setData(result);
+      
+      // Update session store for PDF export
+      const { useSessionStore } = await import('../../stores/sessionStore');
+      useSessionStore.getState().updateComputedData({ jacobian: result.jacobian });
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     if (!robotInfo) {
         return (

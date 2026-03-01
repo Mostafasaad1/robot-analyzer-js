@@ -27,23 +27,29 @@ export function InverseDynamicsPanel() {
         setAccelerations(newAccels);
     };
 
-    const handleCompute = async () => {
-        if (!robotInfo) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await apiService.computeTorques(
-                jointPositions,
-                new Array(dof).fill(0), // zero velocity
-                accelerations
-            );
-            setTorques(result.torques);
-        } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCompute = async () => {
+    if (!robotInfo) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiService.computeTorques(
+        jointPositions,
+        new Array(dof).fill(0), // zero velocity
+        accelerations
+      );
+    setTorques(result.torques);
+
+    // Update session store for PDF export
+    const { useSessionStore } = await import('../../stores/sessionStore');
+    useSessionStore.getState().updateComputedData({ torques: result.torques });
+    console.log('InverseDynamics - stored torques:', result.torques);
+    console.log('InverseDynamics - computedData after update:', useSessionStore.getState().computedData);
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     if (!robotInfo) {
         return (

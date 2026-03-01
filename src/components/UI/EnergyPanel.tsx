@@ -33,19 +33,28 @@ export function EnergyPanel() {
         setVelocities(newVels);
     };
 
-    const handleCompute = async () => {
-        if (!robotInfo) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await apiService.computeEnergy(jointPositions, velocities);
-            setEnergy(result as unknown as EnergyData);
-        } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCompute = async () => {
+    if (!robotInfo) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiService.computeEnergy(jointPositions, velocities);
+      setEnergy(result as unknown as EnergyData);
+      
+      // Update session store for PDF export
+      const { useSessionStore } = await import('../../stores/sessionStore');
+      useSessionStore.getState().updateComputedData({ 
+        energy: { 
+          kinetic: (result as any).kinetic_energy, 
+          potential: (result as any).potential_energy 
+        } 
+      });
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     if (!robotInfo) {
         return (

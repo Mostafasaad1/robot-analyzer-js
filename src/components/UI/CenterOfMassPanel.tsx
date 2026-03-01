@@ -20,19 +20,29 @@ export function CenterOfMassPanel() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleCompute = async () => {
-        if (!robotInfo) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const result = await apiService.computeCenterOfMass(jointPositions);
-            setData(result);
-        } catch (err: any) {
-            setError(err.response?.data?.error || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCompute = async () => {
+    if (!robotInfo) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await apiService.computeCenterOfMass(jointPositions);
+      setData(result);
+      
+      // Update session store for PDF export
+      const { useSessionStore } = await import('../../stores/sessionStore');
+      useSessionStore.getState().updateComputedData({ 
+        com: { 
+          x: result.com[0], 
+          y: result.com[1], 
+          z: result.com[2] 
+        } 
+      });
+    } catch (err: any) {
+      setError(err.response?.data?.error || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     if (!robotInfo) {
         return (
